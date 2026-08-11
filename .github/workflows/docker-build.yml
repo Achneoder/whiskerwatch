@@ -1,0 +1,213 @@
+name: Build & Push Docker Image
+
+# Publishes ghcr.io/achneoder/whiskerwatch.
+#
+# Tagging:
+#   push to main   → latest, sha-<short>
+#   push of v1.2.3 → 1.2.3, latest, sha-<short>
+#   manual         → whatever version you type, plus sha-<short>
+#
+# Deployments always pin an explicit version (never `latest`) — see
+# docs/DEPLOYMENT.md.
+#
+# The image is built once, tested while running, and only then pushed. A broken
+# nginx config is otherwise invisible until it is live: the unit and feature
+# suites in ci.yml exercise the app under `vite preview`, which knows nothing
+# about the SPA fallback, MIME types or the Content-Security-Policy that this
+# image adds.
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Version tag to publish (e.g. 1.2.3)
+        required: true
+        type: string
+      ref:
+        description: Git ref to build from (branch, tag or SHA)
+        required: false
+        default: main
+        type: string
+
+concurrency:
+  group: docker-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  IMAGE: ghcr.io/achneoder/whiskerwatch
+  # Local-only tag used between build and push.
+  LOCAL_TAG: whiskerwatch:candidate
+
+jobs:
+  build:
+    name: Build, verify and push
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event.inputs.ref || github.ref }}
+
+      - name: Compute image tags
+        id: tags
+        run: |
+          set -euo pipefail
+          SHORT_SHA=$(git rev-parse --short HEAD)
+
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            VERSION="${{ github.event.inputs.version }}"
+            TAGS="$VERSION sha-$SHORT_SHA"
+          elif [ "${{ github.ref_type }}" = "tag" ]; then
+            # Strip the leading v from the git tag: v1.2.3 → 1.2.3
+            VERSION="${GITHUB_REF_NAME#v}"
+            TAGS="$VERSION latest sha-$SHORT_SHA"
+          else
+            # Stamped version deliberately equals a tag that is actually
+            # pullable, so /version.txt always names something deployable.
+            VERSION="sha-$SHORT_SHA"
+            TAGS="latest sha-$SHORT_SHA"
+          fi
+
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "tags=$TAGS"       >> "$GITHUB_OUTPUT"
+          echo "Version: $VERSION"
+          echo "Tags: $TAGS"
+
+      - uses: docker/setup-buildx-action@v3
+
+      # Single-platform (linux/amd64) on purpose: --load only supports one
+      # platform, and testing the exact artefact that gets pushed is worth more
+      # than an arm64 variant nothing currently deploys.
+      - name: Build image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          load: true
+          tags: ${{ env.LOCAL_TAG }}
+          build-args: |
+            APP_VERSION=${{ steps.tags.outputs.version }}
+          cache-from: type=gha,scope=whiskerwatch
+          cache-to: type=gha,scope=whiskerwatch,mode=max
+
+      - name: Start the container
+        run: |
+          docker run -d --name candidate -p 8080:80 "$LOCAL_TAG"
+          for _ in $(seq 1 30); do
+            if [ "$(docker inspect -f '{{.State.Health.Status}}' candidate)" = "healthy" ]; then
+              echo "Container healthy."
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "::error::Container never became healthy"
+          docker logs candidate
+          exit 1
+
+      # Asserts the things only this image can get wrong. Each check names the
+      # failure it guards against, because a wrong cache header does not break
+      # anything until users are stuck on a stale build.
+      - name: Verify the served response
+        run: |
+          set -euo pipefail
+          base=http://localhost:8080
+          fail() { echo "::error::$1"; exit 1; }
+
+          # App shell must be reachable and must not be cached.
+          curl -fsS "$base/" -o /dev/null || fail "app shell not served"
+          curl -fsSI "$base/" | grep -qi 'cache-control:.*no-cache' \
+            || fail "index.html is cacheable — a deploy would not reach users holding a cached shell"
+
+          # The service worker must revalidate, or an old SW keeps serving an
+          # old app offline forever.
+          curl -fsSI "$base/sw.js" | grep -qi 'cache-control:.*no-cache' \
+            || fail "sw.js is cacheable — clients could be pinned to a stale service worker"
+
+          # Manifest needs the right content type or the PWA install prompt is
+          # silently dropped.
+          curl -fsSI "$base/manifest.webmanifest" | grep -qi 'content-type: *application/manifest+json' \
+            || fail "manifest.webmanifest served with the wrong content type"
+
+          # Deep links are client-side routes: they must return the shell, not 404.
+          test "$(curl -s -o /dev/null -w '%{http_code}' "$base/roster")" = "200" \
+            || fail "SPA fallback missing — deep links would 404"
+
+          # A missing asset must 404 rather than fall through to index.html,
+          # which would hand the browser HTML with a JS content type.
+          test "$(curl -s -o /dev/null -w '%{http_code}' "$base/assets/does-not-exist.js")" = "404" \
+            || fail "missing assets fall through to the SPA fallback"
+
+          # Hashed assets are cached for a year; verify one real bundle.
+          asset=$(curl -fsS "$base/" | grep -o '/assets/[A-Za-z0-9._-]*\.js' | head -1)
+          test -n "$asset" || fail "could not find a hashed bundle in index.html"
+          curl -fsSI "$base$asset" | grep -qi 'cache-control:.*immutable' \
+            || fail "hashed assets are not cached immutably"
+
+          curl -fsSI "$base/" | grep -qi 'content-security-policy' \
+            || fail "Content-Security-Policy header missing"
+
+          echo "Version stamp: $(curl -fsS "$base/version.txt")"
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Install Chromium
+        run: pnpm exec playwright install --with-deps chromium
+
+      # The real GM workflows, run against the actual image. This is what catches
+      # a Content-Security-Policy that is one directive too strict — the app
+      # would load but quietly fail to render or store anything.
+      - name: Run feature suite against the container
+        env:
+          # WW_BASE_URL points the suite at the container, so features/support
+          # skips spawning its own `vite preview` server.
+          WW_BASE_URL: http://localhost:8080
+          # The step definitions are TypeScript; test:e2e supplies this loader
+          # via its own script, so it has to be repeated here.
+          NODE_OPTIONS: --import tsx/esm
+        run: pnpm exec cucumber-js
+
+      - name: Container logs on failure
+        if: failure()
+        run: docker logs candidate
+
+      - name: Stop the container
+        if: always()
+        run: docker rm -f candidate || true
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Push image
+        run: |
+          set -euo pipefail
+          for tag in ${{ steps.tags.outputs.tags }}; do
+            docker tag "$LOCAL_TAG" "$IMAGE:$tag"
+            docker push "$IMAGE:$tag"
+            echo "Pushed $IMAGE:$tag"
+          done
+
+      - name: Summary
+        run: |
+          {
+            echo "## Image published"
+            echo
+            echo "- **Repository:** \`$IMAGE\`"
+            echo "- **Version:** \`${{ steps.tags.outputs.version }}\`"
+            echo "- **Tags:** ${{ steps.tags.outputs.tags }}"
+          } >> "$GITHUB_STEP_SUMMARY"

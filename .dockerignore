@@ -1,0 +1,22 @@
+# Keep the build context small and the dependency layer cache stable.
+node_modules
+dist
+build
+coverage
+.git
+.github
+.claude
+docs
+features
+.env
+.DS_Store
+.idea
+.vscode
+*.log
+*.tsbuildinfo
+Dockerfile
+.dockerignore
+docker-compose.yml
+cucumber.mjs
+ROADMAP.md
+CLAUDE.md
