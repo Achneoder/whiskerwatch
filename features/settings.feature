@@ -22,11 +22,27 @@ Feature: Settings
     And I switch the theme to dark
     Then the app uses the "dark" theme
 
-  Scenario: Importing a campaign asks for confirmation first
+  Scenario: Choosing a file that isn't a campaign export fails before anything is replaced
     Given I open Whiskerwatch
     When I navigate to the "Settings" screen
     And I choose an invalid file to import
-    Then I should see "Replace campaign data?"
+    Then I should see "That file is not valid JSON."
+    And I should not see "Replace campaign data?"
+
+  Scenario: Moving a campaign from my phone to my tablet keeps the timeline
+    Given I open Whiskerwatch
+    And I start a live session
+    And the GM bumps "The Gnawing Court"'s faction clock
+    And the GM exits the live session
+    When I navigate to the "Settings" screen
+    And I export the campaign
+    And I pick up my other device
+    And I navigate to the "Settings" screen
+    And I import the exported campaign
+    Then the import preview shows 1 timeline entry
+    When I confirm the import
+    And I navigate to the "Timeline" screen
+    Then I should see "The Gnawing Court clock: 3 — 4" in the timeline
 
   Scenario: A reset button is available to start over
     Given I open Whiskerwatch

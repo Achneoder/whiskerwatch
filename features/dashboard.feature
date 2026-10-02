@@ -6,7 +6,7 @@ Feature: Session prep checklist
   Background:
     Given I open Whiskerwatch
     And I navigate to the "Adventure" screen
-    And the GM adds a beat titled "Find the tunnel entrance" to "The granary raid"
+    And the GM adds an active beat titled "Find the tunnel entrance" to "The granary raid"
     And I navigate to the "Overview" screen
 
   Scenario: The Session Prep panel reflects real campaign state and jumps straight to the relevant screen

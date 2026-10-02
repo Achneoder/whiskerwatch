@@ -8,7 +8,7 @@ Feature: Campaign timeline view
 
   Scenario: Completing a beat and bumping a faction clock both show up on the Timeline
     When I navigate to the "Adventure" screen
-    And the GM adds a beat titled "Find the tunnel entrance" to "The granary raid"
+    And the GM adds an active beat titled "Find the tunnel entrance" to "The granary raid"
     And the GM completes the "Find the tunnel entrance" beat
     And I start a live session
     And the GM bumps "The Gnawing Court"'s faction clock

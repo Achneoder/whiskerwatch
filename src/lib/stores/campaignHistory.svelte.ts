@@ -79,3 +79,6 @@ export function logDeath(input: Omit<DeathHistoryEntry, 'id' | 'type'>): void {
 export function replaceCampaignHistory(entries: CampaignHistoryEntry[]): void {
   list.replaceAll(entries);
 }
+
+/** See `PersistedList.flush` — awaited by `campaignExport.ts` after `replaceCampaignHistory` to guarantee an import is durably saved. */
+export const flush: () => Promise<void> = () => list.flush();

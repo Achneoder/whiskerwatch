@@ -14,6 +14,8 @@ export class WhiskerwatchWorld extends World {
   page!: Page;
   /** Remembers the name of the most recently rolled Generators NPC across steps, so a later step can look it up on the Roster/Bestiary screen. */
   lastRolledNpcName?: string;
+  /** The campaign file from the most recent export, kept in memory so it survives switching to a fresh browser context ("my other device"). */
+  exportedCampaign?: { name: string; buffer: Buffer };
 
   constructor(options: IWorldOptions) {
     super(options);
@@ -39,6 +41,13 @@ export class WhiskerwatchWorld extends World {
       });
       this.page.on('pageerror', (err) => process.stderr.write(`[pageerror] ${err.message}\n`));
     }
+  }
+
+  /** Swaps in a brand-new browser context — empty IndexedDB/localStorage, like opening the app on a second device. */
+  async switchToNewDevice(): Promise<void> {
+    await this.context.close();
+    this.context = await this.browser.newContext();
+    this.page = await this.context.newPage();
   }
 
   async closeBrowser(): Promise<void> {
