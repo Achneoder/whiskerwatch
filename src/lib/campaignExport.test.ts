@@ -1,5 +1,13 @@
-import { describe, expect, it, beforeEach } from 'vitest';
-import { buildCampaignExport, parseCampaignExport, importCampaign } from './campaignExport';
+import { describe, expect, it, beforeEach, afterEach, vi } from 'vitest';
+import {
+  buildCampaignExport,
+  parseCampaignExport,
+  importCampaign,
+  readCampaignFile,
+  summarizeCampaignExport,
+  campaignExportFileName,
+  shareCampaign,
+} from './campaignExport';
 import { getCampaignName, setCampaignName, DEFAULT_CAMPAIGN_NAME } from './stores/campaign.svelte';
 import { getParty } from './stores/party.svelte';
 import { getHirelings } from './stores/hirelings.svelte';
@@ -10,6 +18,21 @@ import { getBestiary } from './stores/bestiary.svelte';
 import { getFactions } from './stores/factions.svelte';
 import { getFactionEdges } from './stores/factionEdges.svelte';
 import { getHexNodes } from './stores/hexmap.svelte';
+import { getCampaignHistory, replaceCampaignHistory, type CampaignHistoryEntry } from './stores/campaignHistory.svelte';
+
+const historyEntries: CampaignHistoryEntry[] = [
+  { id: 'h1', type: 'session', timestamp: '2026-09-01T19:00:00.000Z', sessionId: 's1', number: 1, title: 'Into the granary' },
+  {
+    id: 'h2',
+    type: 'clockChanged',
+    timestamp: '2026-09-01T20:00:00.000Z',
+    factionId: 'f1',
+    factionName: 'The Gnawing Court',
+    from: 3,
+    to: 4,
+    max: 6,
+  },
+];
 
 describe('campaignExport', () => {
   beforeEach(() => {
@@ -20,7 +43,7 @@ describe('campaignExport', () => {
   it('builds an export containing the current party, hirelings, adventures, beats, sessions, bestiary, factions and hexes', () => {
     const data = buildCampaignExport();
 
-    expect(data.version).toBe(1);
+    expect(data.version).toBe(2);
     expect(data.campaignName).toBe(DEFAULT_CAMPAIGN_NAME);
     expect(data.party).toEqual(getParty());
     expect(data.hirelings).toEqual(getHirelings());
@@ -31,11 +54,13 @@ describe('campaignExport', () => {
     expect(data.factions).toEqual(getFactions());
     expect(data.factionEdges).toEqual(getFactionEdges());
     expect(data.hexNodes).toEqual(getHexNodes());
+    expect(data.campaignHistory).toEqual(getCampaignHistory());
     expect(typeof data.exportedAt).toBe('string');
   });
 
   it('round-trips through JSON', () => {
     setCampaignName('The Gnawing Court Rises');
+    replaceCampaignHistory(historyEntries);
     const data = buildCampaignExport();
     const parsed = parseCampaignExport(JSON.stringify(data));
 
@@ -49,6 +74,7 @@ describe('campaignExport', () => {
     expect(parsed.factions).toEqual(data.factions);
     expect(parsed.factionEdges).toEqual(data.factionEdges);
     expect(parsed.hexNodes).toEqual(data.hexNodes);
+    expect(parsed.campaignHistory).toEqual(historyEntries);
   });
 
   it('treats missing collections as empty arrays for backward compatibility with older exports', () => {
@@ -63,6 +89,150 @@ describe('campaignExport', () => {
     expect(parsed.factionEdges).toEqual([]);
     expect(parsed.hexNodes).toEqual([]);
     expect(parsed.campaignName).toBeUndefined();
+    expect(parsed.campaignHistory).toBeUndefined();
+  });
+
+  it('imports the timeline so campaign progress moves to another device', async () => {
+    replaceCampaignHistory([]);
+    const file = new File(
+      [JSON.stringify({ version: 2, exportedAt: '2026-09-02T00:00:00.000Z', party: [], hirelings: [], campaignHistory: historyEntries })],
+      'campaign.json',
+      { type: 'application/json' },
+    );
+
+    await importCampaign(file);
+
+    expect(getCampaignHistory()).toEqual(historyEntries);
+  });
+
+  it("keeps this device's timeline when importing a v1 export that has none", async () => {
+    replaceCampaignHistory(historyEntries);
+    const legacy = new File(
+      [JSON.stringify({ version: 1, exportedAt: '2026-01-01T00:00:00.000Z', party: [], hirelings: [] })],
+      'legacy.json',
+      { type: 'application/json' },
+    );
+
+    await importCampaign(legacy);
+
+    expect(getCampaignHistory()).toEqual(historyEntries);
+  });
+
+  it('rejects a timeline entry with an unknown type or missing fields', () => {
+    const base = { version: 2, exportedAt: '2026-01-01T00:00:00.000Z', party: [], hirelings: [] };
+    expect(() =>
+      parseCampaignExport(JSON.stringify({ ...base, campaignHistory: [{ id: 'x', type: 'mystery', timestamp: '2026-01-01' }] })),
+    ).toThrow();
+    expect(() =>
+      parseCampaignExport(JSON.stringify({ ...base, campaignHistory: [{ id: 'x', type: 'session', timestamp: '2026-01-01' }] })),
+    ).toThrow();
+  });
+
+  it('reads a shared .txt copy of an export just like a .json file', async () => {
+    const data = buildCampaignExport();
+    const file = new File([JSON.stringify(data)], 'whiskerwatch.txt', { type: 'text/plain' });
+
+    const parsed = await readCampaignFile(file);
+
+    expect(parsed.party).toEqual(data.party);
+  });
+
+  it('summarizes a file for the import preview', () => {
+    const summary = summarizeCampaignExport({
+      ...buildCampaignExport(),
+      campaignName: 'Owl Bridge',
+      exportedAt: '2026-09-02T10:00:00.000Z',
+      sessions: [
+        { id: 'a', number: 2, date: '2026-08-01', title: 'Two' },
+        { id: 'b', number: 5, date: '2026-09-01', title: 'Five' },
+      ] as never,
+      campaignHistory: historyEntries,
+    });
+
+    expect(summary).toMatchObject({
+      campaignName: 'Owl Bridge',
+      exportedAt: '2026-09-02T10:00:00.000Z',
+      sessions: 2,
+      latestSessionNumber: 5,
+      timelineEntries: 2,
+    });
+  });
+
+  it('names the file after the campaign and export date', () => {
+    expect(campaignExportFileName({ campaignName: 'Die Höhle der Eule!', exportedAt: '2026-10-02T08:00:00.000Z' })).toBe(
+      'whiskerwatch-die-hohle-der-eule-2026-10-02.json',
+    );
+    expect(campaignExportFileName({ exportedAt: '2026-10-02T08:00:00.000Z' }, 'txt')).toBe('whiskerwatch-2026-10-02.txt');
+  });
+
+  describe('shareCampaign', () => {
+    const originalShare = navigator.share;
+    const originalCanShare = navigator.canShare;
+    let click: ReturnType<typeof vi.spyOn>;
+
+    beforeEach(() => {
+      click = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {});
+      URL.createObjectURL = vi.fn(() => 'blob:test');
+      URL.revokeObjectURL = vi.fn();
+    });
+
+    afterEach(() => {
+      click.mockRestore();
+      Object.assign(navigator, { share: originalShare, canShare: originalCanShare });
+    });
+
+    it('falls back to a download when the browser cannot share files', async () => {
+      Object.assign(navigator, { share: undefined, canShare: undefined });
+
+      await expect(shareCampaign()).resolves.toBe('downloaded');
+      expect(click).toHaveBeenCalledOnce();
+    });
+
+    it('opens the share sheet with the JSON file when supported', async () => {
+      const share = vi.fn(async () => {});
+      Object.assign(navigator, { share, canShare: () => true });
+
+      await expect(shareCampaign()).resolves.toBe('shared');
+      const files = (share.mock.calls[0] as unknown as [ShareData])[0].files!;
+      expect(files[0]!.name).toMatch(/\.json$/);
+      expect(click).not.toHaveBeenCalled();
+    });
+
+    it('shares a .txt copy where only plain text files can be shared (Chrome on Android)', async () => {
+      const share = vi.fn(async () => {});
+      Object.assign(navigator, {
+        share,
+        canShare: (data: ShareData) => data.files?.[0]?.type === 'text/plain',
+      });
+
+      await expect(shareCampaign()).resolves.toBe('shared');
+      const files = (share.mock.calls[0] as unknown as [ShareData])[0].files!;
+      expect(files[0]!.name).toMatch(/\.txt$/);
+    });
+
+    it('does nothing more when the GM closes the share sheet', async () => {
+      Object.assign(navigator, {
+        share: vi.fn(async () => {
+          throw new DOMException('closed', 'AbortError');
+        }),
+        canShare: () => true,
+      });
+
+      await expect(shareCampaign()).resolves.toBe('cancelled');
+      expect(click).not.toHaveBeenCalled();
+    });
+
+    it('still downloads the file when sharing fails for another reason', async () => {
+      Object.assign(navigator, {
+        share: vi.fn(async () => {
+          throw new DOMException('nope', 'NotAllowedError');
+        }),
+        canShare: () => true,
+      });
+
+      await expect(shareCampaign()).resolves.toBe('downloaded');
+      expect(click).toHaveBeenCalledOnce();
+    });
   });
 
   it('imports an older export without a campaignName by keeping the current campaign name', async () => {

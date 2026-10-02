@@ -492,19 +492,19 @@
     },
     "data": {
       "title": "Kampagnendaten",
-      "intro": "Exportiere alles – Gruppen, Söldner, Abenteuer, Bestiarium, Fraktionen, Hexkarte und Sitzungsprotokolle – in eine Datei, die du sichern oder auf ein anderes Gerät übertragen kannst.",
-      "exportHeading": "Exportieren",
-      "exportHint": "Lade eine einzelne JSON-Datei mit deiner gesamten Kampagne herunter.",
+      "intro": "Exportiere alles – Gruppen, Söldner, Abenteuer, Bestiarium, Fraktionen, Hexkarte, Sitzungsprotokolle und die Chronik – in eine Datei, die du sichern oder auf ein anderes Gerät übertragen kannst.",
+      "exportHeading": "Exportieren & teilen",
+      "exportHint": "Schicke deine gesamte Kampagne über das Teilen-Menü direkt an dein anderes Gerät (AirDrop, Nearby Share, Messenger, Cloud-Ordner) – oder speichere sie als Datei, wo Teilen nicht verfügbar ist.",
       "export": "Kampagne exportieren",
       "exportDone": "In deinen Downloads gespeichert.",
       "importHeading": "Importieren",
-      "importHint": "Aus einer zuvor exportierten Datei wiederherstellen. Dies ersetzt alles, was aktuell in der App ist.",
+      "importHint": "Aus einer exportierten Datei wiederherstellen – z. B. einer, die du von deinem anderen Gerät geschickt hast. Dies ersetzt alles, was aktuell in der App ist.",
       "import": "Kampagne importieren",
       "importDone": "Kampagne wiederhergestellt.",
       "resetHeading": "Zurücksetzen",
       "resetHint": "Alle Kampagnendaten löschen und neu anfangen. Dies kann nicht rückgängig gemacht werden – exportiere alles, bevor du fortfährst.",
       "reset": "Alles zurücksetzen",
-      "footer": "Tipp: Exportiere nach jeder Sitzung, damit nichts verloren geht, falls der Speicher dieses Browsers geleert wird.",
+      "footer": "Tipp: Du wechselst zwischen Handy und Tablet? Exportiere auf dem Gerät, auf dem du zuletzt gespielt hast, und importiere vor der nächsten Sitzung auf dem anderen.",
       "confirmTitle": "Kampagnendaten ersetzen?",
       "confirmMessage": "Beim Importieren wird alles überschrieben, was aktuell in diesem Browser gespeichert ist. Das kann nur rückgängig gemacht werden, wenn du einen weiteren Export hast.",
       "confirmAction": "Importieren und ersetzen",
@@ -512,7 +512,20 @@
       "resetConfirmTitle": "Alle Kampagnendaten zurücksetzen?",
       "resetConfirmMessage": "Dies löscht dauerhaft alle deine Kampagnendaten (Gruppen, Abenteuer, Fraktionen usw.) und kann nicht rückgängig gemacht werden. Stelle sicher, dass du alles, was du behalten möchtest, vorher exportiert hast.",
       "resetConfirmAction": "Zurücksetzen und neu anfangen",
-      "resetDone": "Kampagne zurückgesetzt. Neuer Anfang!"
+      "resetDone": "Kampagne zurückgesetzt. Neuer Anfang!",
+      "exportShared": "Kampagne geteilt. Importiere sie auf deinem anderen Gerät unter Einstellungen.",
+      "preview": {
+        "label": "Inhalt dieser Datei",
+        "campaign": "Kampagne",
+        "exportedAt": "Exportiert",
+        "sessions": "Sitzungen",
+        "latestSession": "zuletzt: #{number}",
+        "party": "Gruppenmäuse",
+        "adventures": "Abenteuer",
+        "timeline": "Chronik-Einträge",
+        "timelineKept": "nicht enthalten (die Chronik dieses Geräts bleibt erhalten)",
+        "olderWarning": "Achtung: Diese Datei reicht nur bis Sitzung #{file}, auf diesem Gerät gibt es aber schon Sitzung #{local}. Der Import würde deine Kampagne zurückwerfen."
+      }
     }
   },
   "timeline": {
