@@ -1,0 +1,28 @@
+# Self-hosting Whiskerwatch.
+#
+# There is nothing to configure: no database, no API keys, no auth. Campaign data
+# lives in the browser of whoever opens the app, so this is one static web server
+# and nothing else.
+#
+#   docker compose up -d      → http://localhost:8080
+#
+# To build from a local checkout instead of pulling the published image:
+#
+#   docker compose up -d --build
+#
+# For a public deployment, put a TLS-terminating reverse proxy in front of this
+# and point it at port 80 of the container. See docs/DEPLOYMENT.md.
+
+name: whiskerwatch
+
+services:
+  web:
+    image: ghcr.io/achneoder/whiskerwatch:latest
+    build:
+      context: .
+      args:
+        APP_VERSION: local
+    restart: unless-stopped
+    ports:
+      - '8080:80'
+    # The image declares its own HEALTHCHECK; nothing to add here.

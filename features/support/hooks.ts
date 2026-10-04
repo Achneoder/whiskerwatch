@@ -47,7 +47,9 @@ function startPreviewServer(): Promise<string> {
     let buffer = '';
     const timer = setTimeout(() => reject(new Error('Vite never printed a Local URL')), 45_000);
     const onData = (chunk: Buffer) => {
-      buffer += chunk.toString();
+      // Strip ANSI escapes: with CI set, Vite colours its output and wraps the
+      // port in bold codes, which would otherwise break the URL match.
+      buffer += chunk.toString().replace(/\x1b\[[0-9;]*m/g, '');
       const match = buffer.match(/https?:\/\/localhost:(\d+)\//);
       if (match) {
         clearTimeout(timer);

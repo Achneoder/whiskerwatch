@@ -16,7 +16,7 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "packageManager": "pnpm@11.10.0",
+  "packageManager": "pnpm@11.28.2",
   "devDependencies": {
     "@cucumber/cucumber": "^13.0.0",
     "@sveltejs/vite-plugin-svelte": "^7.0.0",

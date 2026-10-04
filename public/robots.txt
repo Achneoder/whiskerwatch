@@ -1,0 +1,8 @@
+# Whiskerwatch is a public, open-source app and every route renders the same
+# client-side shell, so there is nothing to hide from crawlers and nothing
+# per-route for them to find.
+#
+# Without this file, /robots.txt would hit the single-page-app fallback and
+# return index.html — HTML served where a crawler expects plain text.
+User-agent: *
+Allow: /
