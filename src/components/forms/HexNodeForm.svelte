@@ -1,4 +1,5 @@
 <script lang="ts">
+  import HelpTip from '../ui/HelpTip.svelte';
   import { X } from 'lucide-svelte';
   import { _ } from 'svelte-i18n';
   import Input from '../ui/Input.svelte';
@@ -84,7 +85,10 @@
 
 <form onsubmit={handleSubmit} class="flex flex-col gap-[var(--sp-4)]">
   <div class="flex flex-col gap-1.5">
-    <span class="ww-label">{$_('hexMap.form.terrain')}</span>
+    <span class="flex items-center gap-1.5">
+      <span class="ww-label">{$_('hexMap.form.terrain')}</span>
+      <HelpTip text={$_('help.terrain')} label={$_('hexMap.form.terrain')} />
+    </span>
     <select
       bind:value={terrain}
       class="h-[var(--tap)] rounded-[var(--radius-md)] border border-[var(--border-strong)] bg-[var(--surface-raised)] px-[var(--pad-control-x)] text-[length:var(--text-body)] w-fit"
@@ -160,7 +164,10 @@
   </div>
 
   <div class="flex flex-col gap-2">
-    <span class="ww-label">{$_('hexMap.form.encounters')}</span>
+    <span class="flex items-center gap-1.5">
+      <span class="ww-label">{$_('hexMap.form.encounters')}</span>
+      <HelpTip text={$_('help.encounters')} label={$_('hexMap.form.encounters')} />
+    </span>
     {#if bestiary.length === 0}
       <p class="text-[length:var(--text-sm)] text-[var(--text-muted)]">{$_('hexMap.form.encountersNoBestiary')}</p>
     {:else}

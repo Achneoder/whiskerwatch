@@ -1,4 +1,5 @@
 <script lang="ts">
+  import HelpTip from '../ui/HelpTip.svelte';
   import { Dices, Swords, Package, UserRound, BookOpen } from 'lucide-svelte';
   import { _ } from 'svelte-i18n';
   import AppSidebar, { type NavScreen } from '../layout/AppSidebar.svelte';
@@ -287,9 +288,14 @@
                   <p class="text-[length:var(--text-caption)] text-[var(--text-muted)] mb-1">{resultSourceLabel}</p>
                   <StatBlock entry={encounterResult} statGap="var(--sp-3)" />
                 </div>
-                <Button variant="secondary" size="sm" onclick={rollEncounterReaction}>
-                  {$_('generators.encounter.reaction.roll')}
-                </Button>
+                <div class="flex items-center gap-[var(--sp-2)]">
+                  <div class="flex-1 min-w-0 flex flex-col">
+                    <Button variant="secondary" size="sm" onclick={rollEncounterReaction}>
+                      {$_('generators.encounter.reaction.roll')}
+                    </Button>
+                  </div>
+                  <HelpTip text={$_('help.reaction')} label={$_('help.reactionLabel')} />
+                </div>
                 {#if reactionResult}
                   <ReactionResult result={reactionResult} />
                 {/if}

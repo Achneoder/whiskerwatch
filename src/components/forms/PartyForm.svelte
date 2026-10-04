@@ -64,9 +64,9 @@
   <Input label={$_('roster.form.role')} bind:value={role} />
 
   <div class="flex gap-[var(--sp-5)] flex-wrap">
-    <Stepper label={$_('roster.form.hp')} value={hp} min={0} max={max} size="md" onchange={(v) => (hp = v)} />
+    <Stepper label={$_('roster.form.hp')} help={$_('help.hp')} value={hp} min={0} max={max} size="md" onchange={(v) => (hp = v)} />
     <Stepper label={$_('roster.form.maxHp')} value={max} min={1} max={12} size="md" onchange={(v) => (max = v)} />
-    <Stepper label={$_('roster.form.pips')} value={pips} min={0} max={9999} step={5} size="md" onchange={(v) => (pips = v)} />
+    <Stepper label={$_('roster.form.pips')} help={$_('help.pips')} value={pips} min={0} max={9999} step={5} size="md" onchange={(v) => (pips = v)} />
   </div>
 
   <div class="flex flex-col gap-2">

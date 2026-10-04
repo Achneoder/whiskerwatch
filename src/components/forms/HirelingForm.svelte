@@ -62,15 +62,16 @@
   <div class="flex gap-[var(--sp-4)] flex-wrap">
     <div class="flex-1 min-w-40"><Input label={$_('roster.form.role')} bind:value={role} /></div>
     <div class="flex-1 min-w-32">
-      <Input label={$_('roster.form.wage')} type="number" min="0" bind:value={wageInput} />
+      <Input label={$_('roster.form.wage')} help={$_('help.wage')} type="number" min="0" bind:value={wageInput} />
     </div>
   </div>
 
   <div class="flex gap-[var(--sp-5)] flex-wrap">
-    <Stepper label={$_('roster.form.hp')} value={hp} min={0} max={max} size="md" onchange={(v) => (hp = v)} />
+    <Stepper label={$_('roster.form.hp')} help={$_('help.hp')} value={hp} min={0} max={max} size="md" onchange={(v) => (hp = v)} />
     <Stepper label={$_('roster.form.maxHp')} value={max} min={1} max={12} size="md" onchange={(v) => (max = v)} />
     <Stepper
       label={$_('roster.form.loyalty')}
+      help={$_('help.loyalty')}
       value={loyalty}
       min={2}
       max={18}

@@ -717,5 +717,24 @@
       "deceased": "Deceased"
     },
     "sessionSecondary": "#{number} · {days} days ago"
+  },
+  "help": {
+    "ariaLabel": "Help: {label}",
+    "hp": "Hit Protection — dodging and shrugging off harm, not flesh. Damage comes off HP first; once it's gone, damage drains STR and calls for a STR save. A short rest restores some HP, a long rest (one watch) all of it.",
+    "pips": "Mausritter's currency, spent on gear, wages, lodging and downtime.",
+    "wage": "Pips this hireling is paid per day.",
+    "loyalty": "Loyalty saves roll 2d6: at or under this score, the hireling stays. Call for one if they go unpaid or unfed, or are ordered into more danger than they signed on for.",
+    "armor": "Subtracted from every hit this creature takes. Most creatures have 0–2.",
+    "inventory": "Every mouse has 10 slots: 2 paws, 2 body, 6 pack. Paws and body are ready to hand; the pack takes time to dig through. Past 10 slots, something has to be dropped.",
+    "slots": "How many inventory slots this item fills. Bulky things like heavy armour or big weapons take 2.",
+    "charges": "Usage dots (most items have 3). Mark one per meal for rations, per 6 turns for torches, and after a fight for weapons and armour. All marked means used up or broken; 0 means it doesn't wear out.",
+    "disposition": "How this faction currently regards the party. Colours how its members react in play.",
+    "clock": "Progress toward the faction's current goal. Advance it as they act between sessions; when every segment is filled, the goal comes to pass.",
+    "terrain": "Sets travel speed: crossing a hex takes 1 watch on foot, or 2 through forest or hills. Water can't be crossed on foot.",
+    "encounters": "Creatures that might turn up here. Weight is each creature's share of the encounter roll — weight 3 is three times as likely as weight 1.",
+    "watch": "A day has four watches. Travelling a hex, foraging or a long rest each takes one. Check for an encounter in the morning and evening watches. A mouse that gets no long rest during a day becomes Exhausted.",
+    "reaction": "Roll 2d6 when the party meets a creature whose attitude isn't obvious: low results are hostile, high results helpful. A starting point for the scene, not a script.",
+    "backup": "Your campaign lives only in this browser. Clearing site data or losing the device erases it. An exported file is your backup — and lets you move the campaign to another device.",
+    "reactionLabel": "Reaction roll"
   }
 }

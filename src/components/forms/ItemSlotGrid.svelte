@@ -1,4 +1,5 @@
 <script lang="ts">
+  import HelpTip from '../ui/HelpTip.svelte';
   import { _ } from 'svelte-i18n';
   import Input from '../ui/Input.svelte';
   import Stepper from '../ui/Stepper.svelte';
@@ -119,7 +120,10 @@
     <Input label={$_('inventory.form.name')} bind:value={draftName} required />
     <div class="flex gap-[var(--sp-5)] flex-wrap items-end">
       <div class="flex flex-col gap-1.5">
-        <span class="ww-label">{$_('inventory.form.slots')}</span>
+        <span class="flex items-center gap-1.5">
+          <span class="ww-label">{$_('inventory.form.slots')}</span>
+          <HelpTip text={$_('help.slots')} label={$_('inventory.form.slots')} />
+        </span>
         <div class="inline-flex rounded-[var(--radius-md)] border border-[var(--border-strong)] overflow-hidden">
           {#each slotChoices as n (n)}
             <button
@@ -135,7 +139,7 @@
           {/each}
         </div>
       </div>
-      <Stepper label={$_('inventory.form.charges')} value={draftChargeTrack} min={0} max={6} onchange={(v) => (draftChargeTrack = v)} />
+      <Stepper label={$_('inventory.form.charges')} help={$_('help.charges')} value={draftChargeTrack} min={0} max={6} onchange={(v) => (draftChargeTrack = v)} />
     </div>
     <Input
       label={$_('inventory.form.notes')}
@@ -193,7 +197,10 @@
 
 <div class="flex flex-col gap-[var(--gap-stack)]">
   <div class="flex items-center justify-between gap-2 flex-wrap">
-    <span class="ww-label">{$_('inventory.heading')}</span>
+    <span class="flex items-center gap-1.5">
+      <span class="ww-label">{$_('inventory.heading')}</span>
+      <HelpTip text={$_('help.inventory')} label={$_('inventory.heading')} />
+    </span>
     <span class="font-[family-name:var(--font-mono)] text-[length:var(--text-sm)] text-[var(--text-secondary)]">
       {$_('inventory.slotsUsed', { values: { used, max: MAX_SLOTS } })}
     </span>

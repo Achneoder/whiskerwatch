@@ -68,7 +68,7 @@
   <div class="flex gap-[var(--sp-5)] flex-wrap">
     <Stepper label={$_('bestiary.form.hd')} value={hd} min={1} max={20} size="md" onchange={(v) => (hd = v)} />
     <Stepper label={$_('bestiary.form.hp')} value={hp} min={1} max={99} size="md" onchange={(v) => (hp = v)} />
-    <Stepper label={$_('bestiary.form.armor')} value={armor} min={0} max={9} size="md" onchange={(v) => (armor = v)} />
+    <Stepper label={$_('bestiary.form.armor')} help={$_('help.armor')} value={armor} min={0} max={9} size="md" onchange={(v) => (armor = v)} />
   </div>
 
   <div class="flex flex-col gap-2">

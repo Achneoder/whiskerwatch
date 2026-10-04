@@ -717,5 +717,24 @@
       "deceased": "Verstorben"
     },
     "sessionSecondary": "#{number} · vor {days} Tagen"
+  },
+  "help": {
+    "ariaLabel": "Hilfe: {label}",
+    "hp": "Trefferschutz — Ausweichen und Wegstecken, nicht Fleisch und Blut. Schaden geht zuerst von den TP ab; sind sie aufgebraucht, sinkt STK und ein STK-Rettungswurf ist fällig. Eine kurze Rast stellt einen Teil der TP wieder her, eine lange Rast (eine Wache) alle.",
+    "pips": "Die Währung in Mausritter, für Ausrüstung, Lohn, Unterkunft und die Ruhephase.",
+    "wage": "Pfennige, die dieser Söldner pro Tag als Lohn erhält.",
+    "loyalty": "Loyalitäts-Rettungswürfe nutzen 2W6: Bei einem Ergebnis bis zu diesem Wert bleibt der Söldner. Fällig, wenn er unbezahlt oder hungrig bleibt oder in größere Gefahr geschickt wird, als vereinbart war.",
+    "armor": "Wird von jedem Treffer abgezogen, den diese Kreatur erleidet. Die meisten Kreaturen haben 0–2.",
+    "inventory": "Jede Maus hat 10 Plätze: 2 Pfoten, 2 Körper, 6 Rucksack. Pfoten und Körper sind griffbereit; im Rucksack muss man erst kramen. Mehr als 10 Plätze gehen nicht — etwas muss zurückbleiben.",
+    "slots": "Wie viele Inventarplätze dieser Gegenstand belegt. Sperriges wie schwere Rüstung oder große Waffen braucht 2.",
+    "charges": "Abnutzungspunkte (die meisten Gegenstände haben 3). Einen markieren: bei Rationen pro Mahlzeit, bei Fackeln alle 6 Spielzüge, bei Waffen und Rüstung nach einem Kampf. Sind alle markiert, ist der Gegenstand verbraucht oder kaputt; 0 heißt: nutzt sich nicht ab.",
+    "disposition": "Wie diese Fraktion der Gruppe derzeit gegenübersteht. Prägt, wie ihre Mitglieder im Spiel reagieren.",
+    "clock": "Fortschritt auf das aktuelle Ziel der Fraktion. Rücke sie vor, wenn die Fraktion zwischen den Sitzungen handelt; sind alle Segmente gefüllt, tritt das Ziel ein.",
+    "terrain": "Bestimmt das Reisetempo: Ein Hex zu Fuß zu durchqueren dauert 1 Wache, durch Wald oder Hügel 2. Wasser ist zu Fuß nicht passierbar.",
+    "encounters": "Kreaturen, die hier auftauchen können. Das Gewicht ist ihr Anteil am Begegnungswurf — Gewicht 3 ist dreimal so wahrscheinlich wie Gewicht 1.",
+    "watch": "Ein Tag hat vier Wachen. Ein Hex reisen, Nahrung suchen oder eine lange Rast dauert je eine. Begegnungsproben gibt es in der Morgen- und Abendwache. Wer an einem Tag keine lange Rast bekommt, ist erschöpft.",
+    "reaction": "Würfle 2W6, wenn die Gruppe auf eine Kreatur trifft, deren Haltung nicht offensichtlich ist: Niedrige Ergebnisse sind feindselig, hohe hilfsbereit. Ein Ausgangspunkt für die Szene, kein Drehbuch.",
+    "backup": "Deine Kampagne existiert nur in diesem Browser. Werden die Websitedaten gelöscht oder geht das Gerät verloren, ist sie weg. Eine exportierte Datei ist dein Backup — und bringt die Kampagne auf ein anderes Gerät.",
+    "reactionLabel": "Reaktionswurf"
   }
 }

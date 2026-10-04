@@ -142,7 +142,7 @@
   {/if}
 {/snippet}
 
-<Card eyebrow={$_('liveSession.watch.eyebrow')} footer={notice ? noticeFooter : undefined}>
+<Card eyebrow={$_('liveSession.watch.eyebrow')} eyebrowHelp={$_('help.watch')} footer={notice ? noticeFooter : undefined}>
   <div class="flex flex-col gap-[var(--sp-3)]">
     <div class="flex items-center gap-2 flex-wrap">
       <span class="font-[family-name:var(--font-display)] font-bold text-[length:var(--text-title)]">

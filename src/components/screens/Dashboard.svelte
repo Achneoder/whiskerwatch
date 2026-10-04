@@ -315,6 +315,7 @@
 
     <Card
       eyebrow={$_('dashboard.backupCard.eyebrow')}
+      eyebrowHelp={$_('help.backup')}
       title={$_('dashboard.backupCard.title')}
       class="!rounded-[var(--radius-md)]"
     >

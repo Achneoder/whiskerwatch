@@ -1,4 +1,5 @@
 <script lang="ts">
+  import HelpTip from '../ui/HelpTip.svelte';
   import { X } from 'lucide-svelte';
   import { _ } from 'svelte-i18n';
   import Input from '../ui/Input.svelte';
@@ -78,7 +79,10 @@
   <Input label={$_('factions.form.name')} bind:value={name} required />
 
   <div class="flex flex-col gap-1.5">
-    <span class="ww-label">{$_('factions.form.disposition')}</span>
+    <span class="flex items-center gap-1.5">
+      <span class="ww-label">{$_('factions.form.disposition')}</span>
+      <HelpTip text={$_('help.disposition')} label={$_('factions.form.disposition')} />
+    </span>
     <select
       bind:value={disposition}
       class="h-[var(--tap)] rounded-[var(--radius-md)] border border-[var(--border-strong)] bg-[var(--surface-raised)] px-[var(--pad-control-x)] text-[length:var(--text-body)] w-fit"
@@ -90,7 +94,7 @@
   </div>
 
   <div class="flex gap-[var(--sp-5)] flex-wrap">
-    <Stepper label={$_('factions.form.clock')} value={clock} min={0} max={of} size="md" onchange={(v) => (clock = v)} />
+    <Stepper label={$_('factions.form.clock')} help={$_('help.clock')} value={clock} min={0} max={of} size="md" onchange={(v) => (clock = v)} />
     <Stepper label={$_('factions.form.of')} value={of} min={1} max={12} size="md" onchange={setOf} />
   </div>
 
