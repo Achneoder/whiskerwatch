@@ -13,7 +13,7 @@
 FROM node:24-alpine AS builder
 
 # Keep in step with the packageManager field in package.json.
-RUN corepack enable && corepack prepare pnpm@11.10.0 --activate
+RUN corepack enable && corepack prepare pnpm@11.28.2 --activate
 
 WORKDIR /app
 
