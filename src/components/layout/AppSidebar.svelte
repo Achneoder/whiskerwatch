@@ -127,7 +127,7 @@
 
 <!-- Desktop / tablet-landscape sidebar -->
 <aside
-  class="hidden md:flex md:w-[var(--sidebar-w)] shrink-0 border-r border-[var(--border)] bg-[var(--surface)] py-[var(--sp-5)] px-[var(--sp-4)] flex-col gap-[var(--sp-5)]"
+  class="hidden md:flex md:w-[var(--sidebar-w)] md:sticky md:top-0 md:h-dvh md:overflow-y-auto shrink-0 border-r border-[var(--border)] bg-[var(--surface)] py-[var(--sp-5)] px-[var(--sp-4)] flex-col gap-[var(--sp-5)]"
 >
   <div class="font-[family-name:var(--font-display)] font-extrabold text-[22px] tracking-[-0.02em]">
     Whisker<span class="text-[var(--accent)]">watch</span>
