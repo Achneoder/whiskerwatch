@@ -1,10 +1,13 @@
 <script lang="ts">
   import type { HTMLInputAttributes } from 'svelte/elements';
   import type { Snippet } from 'svelte';
+  import HelpTip from './HelpTip.svelte';
 
   interface Props extends Omit<HTMLInputAttributes, 'size' | 'prefix'> {
     label?: string;
     hint?: string;
+    /** Optional explanation shown in a HelpTip next to the label. */
+    help?: string;
     error?: string;
     prefix?: Snippet;
     suffix?: Snippet;
@@ -15,6 +18,7 @@
   let {
     label,
     hint,
+    help,
     error,
     prefix,
     suffix,
@@ -45,7 +49,12 @@
 </script>
 
 <div class="flex flex-col gap-1.5 w-full">
-  {#if label}
+  {#if label && help}
+    <div class="flex items-center gap-1.5">
+      <label for={rid} class="ww-label">{label}</label>
+      <HelpTip text={help} {label} />
+    </div>
+  {:else if label}
     <label for={rid} class="ww-label">{label}</label>
   {/if}
   <div

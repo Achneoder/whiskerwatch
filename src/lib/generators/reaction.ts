@@ -5,9 +5,9 @@ import { rollDice } from './roll';
  * score. The total is mapped to one of five SRD reaction bands the GM reads
  * straight off the table — there's no pass/fail here, just a band and the
  * guidance sentence that goes with it. Deliberately its own shape (not
- * `LoyaltySaveResult`) since there's no score input and no notion of passing.
+ * `MoraleSaveResult`) since there's no score input and no notion of passing.
  */
-export type ReactionBand = 'hostile' | 'unfriendly' | 'neutral' | 'friendly' | 'helpful';
+export type ReactionBand = 'hostile' | 'unfriendly' | 'unsure' | 'talkative' | 'helpful';
 
 export interface ReactionRollResult {
   dice: [number, number];
@@ -16,21 +16,21 @@ export interface ReactionRollResult {
   guidance: string;
 }
 
-/** SRD reaction guidance sentence for each band, keyed by band name. */
+/** SRD reaction prompt for each band (the GM's question to answer), keyed by band name. */
 export const REACTION_GUIDANCE: Record<ReactionBand, string> = {
-  hostile: 'Attacks or otherwise acts against the party.',
-  unfriendly: "Does the opposite of what's asked, may attack.",
-  neutral: 'Uncertain, will act to preserve itself.',
-  friendly: 'Does as asked, if not put in danger.',
-  helpful: 'Actively helps, and offers a service.',
+  hostile: 'How have the mice angered them?',
+  unfriendly: 'How can they be appeased?',
+  unsure: 'What could win them over?',
+  talkative: 'What could they trade?',
+  helpful: 'How can they help the mice?',
 };
 
 /** 2d6 total → SRD reaction band. */
 export function bandForTotal(total: number): ReactionBand {
   if (total <= 2) return 'hostile';
   if (total <= 5) return 'unfriendly';
-  if (total <= 8) return 'neutral';
-  if (total <= 11) return 'friendly';
+  if (total <= 8) return 'unsure';
+  if (total <= 11) return 'talkative';
   return 'helpful';
 }
 

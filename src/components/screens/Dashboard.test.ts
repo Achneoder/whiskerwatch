@@ -1,12 +1,30 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/svelte';
 import Dashboard from './Dashboard.svelte';
-import { replaceSessions } from '../../lib/stores/sessions.svelte';
+import { replaceSessions, type Session } from '../../lib/stores/sessions.svelte';
 import { replaceBeats, type Beat } from '../../lib/stores/beats.svelte';
 import { replaceHexNodes, type HexNode } from '../../lib/stores/hexmap.svelte';
 import { replaceHirelings, type Hireling } from '../../lib/stores/hirelings.svelte';
 import { replaceFactions, type Faction } from '../../lib/stores/factions.svelte';
 import { getCampaignName, setCampaignName, DEFAULT_CAMPAIGN_NAME } from '../../lib/stores/campaign.svelte';
+import { getLastBackupAt, markBackedUp } from '../../lib/stores/backupTracking.svelte';
+
+const exportCampaign = vi.fn(() => markBackedUp());
+
+vi.mock('../../lib/campaignExport', () => ({
+  exportCampaign: () => exportCampaign(),
+}));
+
+function makeSession(overrides: Partial<Session> = {}): Session {
+  return {
+    id: crypto.randomUUID(),
+    number: 1,
+    date: '2026-01-01',
+    title: 'A session',
+    summary: '',
+    ...overrides,
+  };
+}
 
 function makeBeat(overrides: Partial<Beat> = {}): Beat {
   return {
@@ -49,7 +67,7 @@ function makeHireling(overrides: Partial<Hireling> = {}): Hireling {
     maxStr: 10,
     dex: 10,
     wil: 10,
-    loyalty: 4,
+    loyal: false,
     wage: 5,
     notes: '',
     status: 'active',
@@ -270,6 +288,74 @@ describe('Dashboard', () => {
 
       expect(getCampaignName()).toBe('Original Name');
       expect(screen.getByRole('heading', { name: 'Original Name' })).toBeInTheDocument();
+    });
+  });
+
+  // `backupTracking.svelte.ts`'s in-memory state is a module-level singleton
+  // (see the equivalent note in campaignExport.test.ts) that only ever moves
+  // forward from "never backed up" to "backed up at time T" within a test
+  // file — so these cases are ordered deliberately: the "never backed up"
+  // assertions run first (before anything in this file calls `markBackedUp`),
+  // then the "Export now" case is what actually transitions the singleton to
+  // a backed-up state, and every later case builds on top of that.
+  describe('data safety card', () => {
+    beforeEach(() => {
+      exportCampaign.mockClear();
+    });
+
+    it('shows the all-clear line when there are no sessions logged yet, regardless of backup state', () => {
+      replaceSessions([]);
+      render(Dashboard, { props: { onnavigate: vi.fn() } });
+
+      expect(screen.getByText("Backed up — you're covered.")).toBeInTheDocument();
+    });
+
+    it('shows "never exported" copy and navigates to Settings on tap, when 2+ sessions exist and no backup has ever happened', async () => {
+      expect(getLastBackupAt()).toBeNull();
+      replaceSessions([makeSession({ number: 1 }), makeSession({ number: 2 })]);
+      const onnavigate = vi.fn();
+      render(Dashboard, { props: { onnavigate } });
+
+      expect(screen.getByText("You've never exported this campaign")).toBeInTheDocument();
+      expect(screen.getByText(/2 sessions logged/)).toBeInTheDocument();
+
+      await fireEvent.click(screen.getByText("You've never exported this campaign").closest('button')!);
+      expect(onnavigate).toHaveBeenCalledWith('settings');
+    });
+
+    it('"Export now" calls exportCampaign and collapses the card to the all-clear line', async () => {
+      replaceSessions([makeSession({ number: 1 }), makeSession({ number: 2 })]);
+      render(Dashboard, { props: { onnavigate: vi.fn() } });
+      expect(screen.getByText("You've never exported this campaign")).toBeInTheDocument();
+
+      await fireEvent.click(screen.getByRole('button', { name: 'Export now' }));
+
+      expect(exportCampaign).toHaveBeenCalledOnce();
+      expect(getLastBackupAt()).not.toBeNull();
+      expect(screen.getByText('Saved to your downloads.')).toBeInTheDocument();
+      expect(screen.queryByText("You've never exported this campaign")).not.toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: 'Export now' })).not.toBeInTheDocument();
+    });
+
+    it('does not show a reminder for a single session logged before a recent backup', () => {
+      replaceSessions([makeSession({ number: 1 })]);
+      render(Dashboard, { props: { onnavigate: vi.fn() } });
+
+      // A regular exporter (backed up right after their last session) is
+      // exactly the case the cadence heuristic must never nag.
+      expect(screen.getByText("Backed up — you're covered.")).toBeInTheDocument();
+    });
+
+    it('shows "stale backup" copy once 2+ sessions have been logged since the last export', () => {
+      const backedUpAt = new Date(getLastBackupAt()!);
+      // `Session.date` is a bare `YYYY-MM-DD` (parsed as UTC midnight — see
+      // `sessionDateToTimestamp` in `sessions.svelte.ts`), so it needs to be a
+      // full day *after* `lastBackupAt`'s actual time-of-day to compare later.
+      const after = new Date(backedUpAt.getTime() + 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+      replaceSessions([makeSession({ number: 1, date: after }), makeSession({ number: 2, date: after })]);
+      render(Dashboard, { props: { onnavigate: vi.fn() } });
+
+      expect(screen.getByText('2 sessions since your last export')).toBeInTheDocument();
     });
   });
 });

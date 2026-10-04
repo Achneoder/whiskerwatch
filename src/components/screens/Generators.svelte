@@ -1,7 +1,9 @@
 <script lang="ts">
+  import HelpTip from '../ui/HelpTip.svelte';
   import { Dices, Swords, Package, UserRound, BookOpen } from 'lucide-svelte';
   import { _ } from 'svelte-i18n';
   import AppSidebar, { type NavScreen } from '../layout/AppSidebar.svelte';
+  import type { SearchResult } from '../ui/QuickFind.svelte';
   import Button from '../ui/Button.svelte';
   import Card from '../ui/Card.svelte';
   import Stepper from '../ui/Stepper.svelte';
@@ -24,9 +26,10 @@
   interface Props {
     onnavigate: (screen: NavScreen) => void;
     onstartsession?: () => void;
+    onselectresult?: (result: SearchResult) => void;
   }
 
-  let { onnavigate, onstartsession }: Props = $props();
+  let { onnavigate, onstartsession, onselectresult }: Props = $props();
 
   let rulesOpen = $state(false);
 
@@ -96,7 +99,7 @@
           maxStr: 10,
           dex: 10,
           wil: 10,
-          loyalty: 7,
+          loyal: false,
           wage: 0,
           status: 'active',
           conditions: [],
@@ -187,7 +190,7 @@
 </script>
 
 <div class="flex flex-col md:flex-row min-h-screen bg-[var(--bg)] text-[var(--text)]">
-  <AppSidebar active="generators" {onnavigate} {onstartsession} />
+  <AppSidebar active="generators" {onnavigate} {onstartsession} {onselectresult} />
 
   <main class="flex-1 p-[var(--sp-6)] max-w-[var(--content-max)] flex flex-col gap-[var(--sp-5)]">
     <header class="flex items-center justify-between gap-[var(--sp-3)]">
@@ -285,9 +288,14 @@
                   <p class="text-[length:var(--text-caption)] text-[var(--text-muted)] mb-1">{resultSourceLabel}</p>
                   <StatBlock entry={encounterResult} statGap="var(--sp-3)" />
                 </div>
-                <Button variant="secondary" size="sm" onclick={rollEncounterReaction}>
-                  {$_('generators.encounter.reaction.roll')}
-                </Button>
+                <div class="flex items-center gap-[var(--sp-2)]">
+                  <div class="flex-1 min-w-0 flex flex-col">
+                    <Button variant="secondary" size="sm" onclick={rollEncounterReaction}>
+                      {$_('generators.encounter.reaction.roll')}
+                    </Button>
+                  </div>
+                  <HelpTip text={$_('help.reaction')} label={$_('help.reactionLabel')} />
+                </div>
                 {#if reactionResult}
                   <ReactionResult result={reactionResult} />
                 {/if}

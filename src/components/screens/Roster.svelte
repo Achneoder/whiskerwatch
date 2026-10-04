@@ -2,6 +2,7 @@
   import { Plus, Pencil, Trash2, Download, Upload } from 'lucide-svelte';
   import { _ } from 'svelte-i18n';
   import AppSidebar, { type NavScreen } from '../layout/AppSidebar.svelte';
+  import type { SearchResult } from '../ui/QuickFind.svelte';
   import Button from '../ui/Button.svelte';
   import Card from '../ui/Card.svelte';
   import HpBar from '../ui/HpBar.svelte';
@@ -38,9 +39,13 @@
   interface Props {
     onnavigate: (screen: NavScreen) => void;
     onstartsession?: () => void;
+    onselectresult?: (result: SearchResult) => void;
+    /** Set by `App.svelte` when quick-find selects a party member or hireling on this screen — opens the matching edit modal, then `onconsumedfocus` clears it. */
+    focusId?: string | undefined;
+    onconsumedfocus?: () => void;
   }
 
-  let { onnavigate, onstartsession }: Props = $props();
+  let { onnavigate, onstartsession, onselectresult, focusId, onconsumedfocus }: Props = $props();
 
   const party = getParty();
   const hirelings = getHirelings();
@@ -49,14 +54,6 @@
   const fallenParty = $derived(party.filter((m) => m.status === 'deceased'));
   const activeHirelings = $derived(hirelings.filter((h) => h.status === 'active'));
   const fallenHirelings = $derived(hirelings.filter((h) => h.status === 'deceased'));
-
-  // Retainer limit (Mausritter core): each mouse's WIL score is how many
-  // hirelings it can individually command, but this is tracked as a single
-  // collective capacity across the whole party rather than assigning specific
-  // hirelings to specific mice — there's no UI for that assignment, just a
-  // live "are we over capacity" fact that recomputes as the roster changes.
-  const partyWilCapacity = $derived(activeParty.reduce((sum, m) => sum + m.wil, 0));
-  const overHirelingLimit = $derived(activeHirelings.length > partyWilCapacity);
 
   let memberModal = $state<{ mode: 'add' } | { mode: 'edit'; member: PartyMember } | null>(null);
   let hirelingModal = $state<{ mode: 'add' } | { mode: 'edit'; hireling: Hireling } | null>(null);
@@ -71,6 +68,21 @@
   let scarTarget = $state<{ source: 'party'; member: PartyMember } | { source: 'hireling'; hireling: Hireling } | null>(
     null,
   );
+
+  // Quick-find hand-off: opens the matching party member's or hireling's
+  // edit modal once, then tells `App.svelte` the focus request has been
+  // used. A `focusId` that matches neither list (deleted in another tab
+  // between typing and tapping) is a quiet no-op — see App.svelte's
+  // `selectSearchResult` doc comment for the "dangling id degrades
+  // gracefully" rule this follows.
+  $effect(() => {
+    if (!focusId) return;
+    const member = party.find((m) => m.id === focusId);
+    const hireling = hirelings.find((h) => h.id === focusId);
+    if (member) memberModal = { mode: 'edit', member };
+    else if (hireling) hirelingModal = { mode: 'edit', hireling };
+    onconsumedfocus?.();
+  });
 
   // Each handler below awaits its store's `flush()` right after the mutation:
   // the mutation itself is already applied synchronously (optimistic
@@ -139,7 +151,7 @@
 </script>
 
 <div class="flex flex-col md:flex-row min-h-screen bg-[var(--bg)] text-[var(--text)]">
-  <AppSidebar active="warband" {onnavigate} {onstartsession} />
+  <AppSidebar active="warband" {onnavigate} {onstartsession} {onselectresult} />
 
   <main class="flex-1 p-[var(--sp-6)] max-w-[var(--content-max)] flex flex-col gap-[var(--sp-5)]">
     <header class="flex items-end justify-between gap-[var(--sp-4)] flex-wrap">
@@ -277,13 +289,6 @@
           </Button>
         {/snippet}
         <div class="flex flex-col gap-[var(--sp-3)]">
-          {#if overHirelingLimit}
-            <div
-              class="rounded-[var(--radius-md)] border border-[var(--warning)] bg-[var(--warning-tint)] text-[var(--warning-hover)] px-[var(--sp-4)] py-[var(--sp-3)] text-[length:var(--text-body)]"
-            >
-              {$_('roster.hirelings.hirelingLimitWarning')}
-            </div>
-          {/if}
           {#each activeHirelings as hireling (hireling.id)}
             <div class="flex flex-wrap items-center gap-x-[var(--sp-4)] gap-y-2 py-2 border-b border-[var(--border)]">
               <div class="min-w-23 flex flex-col gap-1">
@@ -303,8 +308,11 @@
                 />
               </div>
               <div class="flex-1 min-w-35"><HpBar value={hireling.hp} max={hireling.max} label={$_('roster.form.hp')} size="sm" /></div>
-              <div class="shrink-0">
-                <StatusPill tone="accent" size="sm" count={hireling.loyalty}>{$_('roster.form.loyalty')}</StatusPill>
+              <div class="shrink-0 flex gap-1">
+                <StatusPill tone="accent" size="sm" count={hireling.wil}>{$_('liveSession.morale')}</StatusPill>
+                {#if hireling.loyal}
+                  <StatusPill tone="success" size="sm">{$_('roster.loyalTag')}</StatusPill>
+                {/if}
               </div>
               <div class="flex gap-1 shrink-0">
                 <button

@@ -1,16 +1,20 @@
 <script lang="ts">
+  import HelpTip from './HelpTip.svelte';
+
   interface Props {
     value?: number;
     min?: number;
     max?: number;
     step?: number;
     label?: string;
+    /** Optional explanation shown in a HelpTip next to the label. */
+    help?: string;
     tone?: 'accent' | 'hp';
     size?: 'sm' | 'md' | 'live';
     onchange?: (value: number) => void;
   }
 
-  let { value = 0, min = 0, max = 99, step = 1, label, tone = 'accent', size = 'live', onchange }: Props = $props();
+  let { value = 0, min = 0, max = 99, step = 1, label, help, tone = 'accent', size = 'live', onchange }: Props = $props();
 
   function clamp(v: number) {
     return Math.max(min, Math.min(max, v));
@@ -29,7 +33,12 @@
 </script>
 
 <div class="flex flex-col gap-1.5 items-center">
-  {#if label}
+  {#if label && help}
+    <span class="flex items-center gap-1.5">
+      <span class="ww-label">{label}</span>
+      <HelpTip text={help} {label} />
+    </span>
+  {:else if label}
     <span class="ww-label">{label}</span>
   {/if}
   <div class="flex items-center {gapClass}">

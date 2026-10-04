@@ -1,9 +1,7 @@
-Feature: Reaction rolls and retainer limits
+Feature: Reaction rolls
   As a game master running Mausritter
-  I want a quick 2d6 reaction roll for an encountered creature, and a heads-up
-  when my hirelings outnumber what my mice can command
-  So that I can improvise NPC attitudes at the table and know when Loyalty
-  checks are likely to get messy
+  I want a quick 2d6 reaction roll for an encountered creature
+  So that I can improvise NPC attitudes at the table
 
   Background:
     Given I open Whiskerwatch
@@ -21,10 +19,3 @@ Feature: Reaction rolls and retainer limits
     And the GM rolls an encounter
     Then the "Roll Reaction" button should be visible again with no reaction result showing
 
-  Scenario: Roster warns when hirelings outnumber what the warband's mice can command
-    When I navigate to the "Warband" screen
-    Then the GM should not see the hireling limit warning
-    When the GM removes every mouse from the warband
-    Then the GM should see the hireling limit warning
-    When the GM adds a mouse named "Juniper" to the warband
-    Then the GM should not see the hireling limit warning

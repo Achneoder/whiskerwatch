@@ -1,27 +1,41 @@
 <script lang="ts">
-  import { HardDrive, Sun, Moon, Download, Upload, RotateCcw } from 'lucide-svelte';
+  import { HardDrive, Sun, Moon, Share2, Upload, RotateCcw } from 'lucide-svelte';
   import { _ } from 'svelte-i18n';
   import AppSidebar, { type NavScreen } from '../layout/AppSidebar.svelte';
+  import type { SearchResult } from '../ui/QuickFind.svelte';
   import Card from '../ui/Card.svelte';
   import Button from '../ui/Button.svelte';
   import Icon from '../ui/Icon.svelte';
   import ConfirmDialog from '../ui/ConfirmDialog.svelte';
+  import CampaignImportPreview from './CampaignImportPreview.svelte';
   import { getTheme, setTheme, type Theme } from '../../lib/stores/theme.svelte';
   import { locale, setLocale, type SupportedLocale } from '../../lib/i18n';
-  import { exportCampaign, importCampaign } from '../../lib/campaignExport';
+  import {
+    shareCampaign,
+    readCampaignFile,
+    applyCampaignImport,
+    summarizeCampaignExport,
+    latestSessionNumber,
+    type CampaignExport,
+    type ShareOutcome,
+  } from '../../lib/campaignExport';
+  import { getSessions } from '../../lib/stores/sessions.svelte';
   import { resetAllCampaignData } from '../../lib/resetData';
 
   interface Props {
     onnavigate: (screen: NavScreen) => void;
     onstartsession?: () => void;
+    onselectresult?: (result: SearchResult) => void;
   }
 
-  let { onnavigate, onstartsession }: Props = $props();
+  let { onnavigate, onstartsession, onselectresult }: Props = $props();
 
-  let exported = $state(false);
+  let exported = $state<Exclude<ShareOutcome, 'cancelled'> | null>(null);
+  let exporting = $state(false);
   let imported = $state(false);
   let importError = $state<string | null>(null);
-  let pendingFile = $state<File | null>(null);
+  let pendingImport = $state<CampaignExport | null>(null);
+  const pendingSummary = $derived(pendingImport ? summarizeCampaignExport(pendingImport) : null);
   let fileInput = $state<HTMLInputElement>();
   let pendingReset = $state(false);
 
@@ -43,11 +57,17 @@
     setLocale(next);
   }
 
-  function handleExport() {
-    exportCampaign();
-    exported = true;
+  async function handleExport() {
+    if (exporting) return;
+    exporting = true;
     imported = false;
     importError = null;
+    try {
+      const outcome = await shareCampaign();
+      exported = outcome === 'cancelled' ? null : outcome;
+    } finally {
+      exporting = false;
+    }
   }
 
   function pickImportFile() {
@@ -55,23 +75,30 @@
     fileInput?.click();
   }
 
-  function handleFileChosen(event: Event) {
+  async function handleFileChosen(event: Event) {
     const input = event.currentTarget as HTMLInputElement;
     const file = input.files?.[0];
     input.value = '';
     if (!file) return;
-    // Confirm before overwriting — this is the only destructive control here.
     importError = null;
     imported = false;
-    pendingFile = file;
+    exported = null;
+    // Validate up front so an unreadable file fails right away, and so the
+    // confirm dialog can show what's actually in the file before it
+    // overwrites everything on this device.
+    try {
+      pendingImport = await readCampaignFile(file);
+    } catch (error) {
+      importError = error instanceof Error ? error.message : String(error);
+    }
   }
 
   async function confirmImport() {
-    if (!pendingFile) return;
-    const file = pendingFile;
-    pendingFile = null;
+    if (!pendingImport) return;
+    const data = pendingImport;
+    pendingImport = null;
     try {
-      await importCampaign(file);
+      await applyCampaignImport(data);
       imported = true;
       importError = null;
     } catch (error) {
@@ -81,7 +108,7 @@
   }
 
   function cancelImport() {
-    pendingFile = null;
+    pendingImport = null;
   }
 
   function initiateReset() {
@@ -104,7 +131,7 @@
 </script>
 
 <div class="flex flex-col md:flex-row min-h-screen bg-[var(--bg)] text-[var(--text)]">
-  <AppSidebar active="settings" {onnavigate} {onstartsession} />
+  <AppSidebar active="settings" {onnavigate} {onstartsession} {onselectresult} />
 
   <main class="flex-1 p-[var(--sp-6)] max-w-[var(--content-max)] flex flex-col gap-[var(--sp-5)]">
     <header>
@@ -171,15 +198,17 @@
       <p class="text-[length:var(--text-sm)] text-[var(--text-secondary)]">{$_('settings.data.intro')}</p>
       <div class="mt-[var(--sp-4)] grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-[var(--sp-4)]">
         <div class="border border-[var(--border)] rounded-[var(--radius-md)] p-[var(--sp-4)] flex flex-col gap-[var(--sp-2)]">
-          <div class="font-bold flex items-center gap-1.5"><Icon icon={Download} />{$_('settings.data.exportHeading')}</div>
+          <div class="font-bold flex items-center gap-1.5"><Icon icon={Share2} />{$_('settings.data.exportHeading')}</div>
           <p class="text-[length:var(--text-sm)] text-[var(--text-muted)] flex-1">{$_('settings.data.exportHint')}</p>
-          <Button variant="primary" block onclick={handleExport}>
+          <Button variant="primary" block disabled={exporting} onclick={handleExport}>
             {#snippet icon()}
-              <Icon icon={Download} />
+              <Icon icon={Share2} />
             {/snippet}
             {$_('settings.data.export')}
           </Button>
-          {#if exported}
+          {#if exported === 'shared'}
+            <p class="text-[length:var(--text-sm)] text-[var(--success)]" role="status">{$_('settings.data.exportShared')}</p>
+          {:else if exported === 'downloaded'}
             <p class="text-[length:var(--text-sm)] text-[var(--success)]" role="status">{$_('settings.data.exportDone')}</p>
           {/if}
         </div>
@@ -196,7 +225,7 @@
           <input
             bind:this={fileInput}
             type="file"
-            accept="application/json"
+            accept="application/json,.json,text/plain,.txt"
             class="sr-only"
             aria-hidden="true"
             tabindex="-1"
@@ -226,15 +255,18 @@
 </div>
 
 <ConfirmDialog
-  open={pendingFile !== null}
+  open={pendingImport !== null}
   title={$_('settings.data.confirmTitle')}
-  message={$_('settings.data.confirmMessage')}
   confirmLabel={$_('settings.data.confirmAction')}
   cancelLabel={$_('settings.data.cancel')}
   danger
   onconfirm={confirmImport}
   oncancel={cancelImport}
-/>
+>
+  {#if pendingSummary}
+    <CampaignImportPreview summary={pendingSummary} localLatestSessionNumber={latestSessionNumber(getSessions())} />
+  {/if}
+</ConfirmDialog>
 
 <ConfirmDialog
   open={pendingReset}

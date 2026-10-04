@@ -18,8 +18,19 @@ import {
   type FactionEdge,
 } from './stores/factionEdges.svelte';
 import { getHexNodes, replaceHexNodes, flush as flushHexNodes, type HexNode } from './stores/hexmap.svelte';
+import {
+  getCampaignHistory,
+  replaceCampaignHistory,
+  flush as flushCampaignHistory,
+  type CampaignHistoryEntry,
+} from './stores/campaignHistory.svelte';
+import { markBackedUp } from './stores/backupTracking.svelte';
 
-export const CAMPAIGN_EXPORT_VERSION = 1;
+/**
+ * v2 added `campaignHistory` (the Timeline ledger). v1 files still import:
+ * every collection added after v1 is optional in `parseCampaignExport`.
+ */
+export const CAMPAIGN_EXPORT_VERSION = 2;
 
 export interface CampaignExport {
   version: typeof CAMPAIGN_EXPORT_VERSION;
@@ -35,6 +46,12 @@ export interface CampaignExport {
   factions: Faction[];
   factionEdges: FactionEdge[];
   hexNodes: HexNode[];
+  /**
+   * Optional so v1 exports (made before the Timeline was exported) still
+   * parse — `applyCampaignImport` leaves the local history alone when it's
+   * missing instead of wiping it.
+   */
+  campaignHistory?: CampaignHistoryEntry[];
 }
 
 export function buildCampaignExport(): CampaignExport {
@@ -51,6 +68,7 @@ export function buildCampaignExport(): CampaignExport {
     factions: getFactions(),
     factionEdges: getFactionEdges(),
     hexNodes: getHexNodes(),
+    campaignHistory: getCampaignHistory(),
   };
 }
 
@@ -153,6 +171,30 @@ function isHexNode(value: unknown): value is HexNode {
   );
 }
 
+function isCampaignHistoryEntry(value: unknown): value is CampaignHistoryEntry {
+  if (!value || typeof value !== 'object') return false;
+  const v = value as Record<string, unknown>;
+  if (typeof v.id !== 'string' || typeof v.timestamp !== 'string') return false;
+  switch (v.type) {
+    case 'session':
+      return typeof v.sessionId === 'string' && typeof v.number === 'number' && typeof v.title === 'string';
+    case 'beatCompleted':
+      return typeof v.beatId === 'string' && typeof v.title === 'string';
+    case 'clockChanged':
+      return (
+        typeof v.factionId === 'string' &&
+        typeof v.factionName === 'string' &&
+        typeof v.from === 'number' &&
+        typeof v.to === 'number' &&
+        typeof v.max === 'number'
+      );
+    case 'death':
+      return typeof v.memberId === 'string' && typeof v.name === 'string';
+    default:
+      return false;
+  }
+}
+
 export function parseCampaignExport(text: string): CampaignExport {
   let data: unknown;
   try {
@@ -199,6 +241,12 @@ export function parseCampaignExport(text: string): CampaignExport {
   if (candidate.hexNodes !== undefined && (!Array.isArray(candidate.hexNodes) || !candidate.hexNodes.every(isHexNode))) {
     throw new Error('That file does not look like a Whiskerwatch campaign export.');
   }
+  if (
+    candidate.campaignHistory !== undefined &&
+    (!Array.isArray(candidate.campaignHistory) || !candidate.campaignHistory.every(isCampaignHistoryEntry))
+  ) {
+    throw new Error('That file does not look like a Whiskerwatch campaign export.');
+  }
 
   return {
     version: CAMPAIGN_EXPORT_VERSION,
@@ -213,23 +261,118 @@ export function parseCampaignExport(text: string): CampaignExport {
     factions: Array.isArray(candidate.factions) ? candidate.factions : [],
     factionEdges: Array.isArray(candidate.factionEdges) ? candidate.factionEdges : [],
     hexNodes: Array.isArray(candidate.hexNodes) ? candidate.hexNodes : [],
+    ...(Array.isArray(candidate.campaignHistory) ? { campaignHistory: candidate.campaignHistory } : {}),
   };
+}
+
+/** What a GM should see about a file before it overwrites everything on this device. */
+export interface CampaignExportSummary {
+  campaignName?: string;
+  exportedAt: string;
+  sessions: number;
+  /** Highest session number in the file — how far the campaign has progressed. */
+  latestSessionNumber: number;
+  party: number;
+  adventures: number;
+  timelineEntries?: number;
+}
+
+export function latestSessionNumber(sessions: Pick<Session, 'number'>[]): number {
+  return sessions.reduce((max, session) => Math.max(max, session.number), 0);
+}
+
+export function summarizeCampaignExport(data: CampaignExport): CampaignExportSummary {
+  return {
+    ...(data.campaignName !== undefined ? { campaignName: data.campaignName } : {}),
+    exportedAt: data.exportedAt,
+    sessions: data.sessions.length,
+    latestSessionNumber: latestSessionNumber(data.sessions),
+    party: data.party.length,
+    adventures: data.adventures.length,
+    ...(data.campaignHistory !== undefined ? { timelineEntries: data.campaignHistory.length } : {}),
+  };
+}
+
+function slugify(name: string): string {
+  return name
+    .normalize('NFKD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 40);
+}
+
+/** e.g. `whiskerwatch-the-gnawing-court-2026-10-02.json` — the campaign name tells files from different campaigns apart. */
+export function campaignExportFileName(data: Pick<CampaignExport, 'campaignName' | 'exportedAt'>, extension = 'json'): string {
+  const slug = data.campaignName ? slugify(data.campaignName) : '';
+  return `whiskerwatch-${slug ? `${slug}-` : ''}${data.exportedAt.slice(0, 10)}.${extension}`;
+}
+
+function downloadFile(file: File): void {
+  const url = URL.createObjectURL(file);
+  const anchor = document.createElement('a');
+  anchor.href = url;
+  anchor.download = file.name;
+  anchor.click();
+  URL.revokeObjectURL(url);
+  markBackedUp();
 }
 
 export function exportCampaign(): void {
   const data = buildCampaignExport();
-  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-  const url = URL.createObjectURL(blob);
-  const anchor = document.createElement('a');
-  anchor.href = url;
-  anchor.download = `whiskerwatch-campaign-${data.exportedAt.slice(0, 10)}.json`;
-  anchor.click();
-  URL.revokeObjectURL(url);
+  downloadFile(new File([JSON.stringify(data, null, 2)], campaignExportFileName(data), { type: 'application/json' }));
+}
+
+export type ShareOutcome = 'shared' | 'downloaded' | 'cancelled';
+
+/**
+ * Hands the campaign to the OS share sheet (AirDrop, Nearby Share, a
+ * messenger, a cloud folder…) so moving it from phone to tablet doesn't mean
+ * digging through a Downloads folder. Falls back to a plain download where
+ * the Web Share API can't share files (most desktop browsers).
+ *
+ * Chrome on Android only shares files from an extension allowlist that
+ * doesn't include `.json`, so a `.txt` copy of the same JSON is tried next —
+ * `importCampaign` parses content, not file names, and accepts either.
+ */
+export async function shareCampaign(): Promise<ShareOutcome> {
+  const data = buildCampaignExport();
+  const json = JSON.stringify(data, null, 2);
+  const jsonFile = new File([json], campaignExportFileName(data), { type: 'application/json' });
+  const candidates = [jsonFile, new File([json], campaignExportFileName(data, 'txt'), { type: 'text/plain' })];
+
+  const shareable =
+    typeof navigator.share === 'function' && typeof navigator.canShare === 'function'
+      ? candidates.find((file) => navigator.canShare({ files: [file] }))
+      : undefined;
+
+  if (shareable) {
+    try {
+      await navigator.share({ files: [shareable], title: data.campaignName ?? 'Whiskerwatch' });
+      return 'shared';
+    } catch (error) {
+      // The GM closed the share sheet — not a failure, and they didn't ask for a download.
+      if (error instanceof DOMException && error.name === 'AbortError') return 'cancelled';
+      // Anything else (e.g. NotAllowedError) falls through to a download so the export still happens.
+    }
+  }
+
+  downloadFile(jsonFile);
+  return 'downloaded';
+}
+
+/** Reads and validates a campaign file without touching any store — used to preview it before confirming. */
+export async function readCampaignFile(file: File): Promise<CampaignExport> {
+  return parseCampaignExport(await file.text());
 }
 
 export async function importCampaign(file: File): Promise<void> {
-  const text = await file.text();
-  const data = parseCampaignExport(text);
+  await applyCampaignImport(await readCampaignFile(file));
+}
+
+/** Replaces every campaign store with `data` and resolves once it's durably saved. */
+export async function applyCampaignImport(data: CampaignExport): Promise<void> {
   // Older exports predate campaign naming — fall back to whatever name is
   // already set (itself defaulted by the store) rather than clobbering it.
   setCampaignName(data.campaignName ?? getCampaignName());
@@ -252,6 +395,8 @@ export async function importCampaign(file: File): Promise<void> {
   replaceFactions(data.factions);
   replaceFactionEdges(data.factionEdges);
   replaceHexNodes(data.hexNodes);
+  // A v1 export carries no Timeline — keep the local one rather than wiping it.
+  if (data.campaignHistory) replaceCampaignHistory(data.campaignHistory);
 
   // Each `replace*` above updates in-memory state immediately and fires off
   // an async IndexedDB write in the background (see `persistedList.svelte.ts`).
@@ -268,5 +413,11 @@ export async function importCampaign(file: File): Promise<void> {
     flushFactions(),
     flushFactionEdges(),
     flushHexNodes(),
+    flushCampaignHistory(),
   ]);
+
+  // Only mark the campaign "backed up" once every store's write above has
+  // actually settled — a failed/interrupted import should never falsely
+  // mark the campaign safe (see backupTracking.svelte.ts's doc comment).
+  markBackedUp();
 }

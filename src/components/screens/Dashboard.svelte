@@ -9,6 +9,8 @@
     AlarmClockCheck,
     ChevronRight,
     PawPrint,
+    ShieldAlert,
+    ShieldCheck,
   } from 'lucide-svelte';
   import type { IconProps } from 'lucide-svelte';
   import type { ComponentType, SvelteComponent } from 'svelte';
@@ -20,22 +22,26 @@
   import Tag from '../ui/Tag.svelte';
   import Icon from '../ui/Icon.svelte';
   import AppSidebar, { type NavScreen } from '../layout/AppSidebar.svelte';
+  import type { SearchResult } from '../ui/QuickFind.svelte';
   import { getParty } from '../../lib/stores/party.svelte';
   import { getHirelings } from '../../lib/stores/hirelings.svelte';
-  import { getLastSession, getNextSessionNumber } from '../../lib/stores/sessions.svelte';
+  import { getLastSession, getNextSessionNumber, getSessions } from '../../lib/stores/sessions.svelte';
   import { getFactions, dispositionTagTone } from '../../lib/stores/factions.svelte';
   import { getBeats } from '../../lib/stores/beats.svelte';
   import { getHexNodes } from '../../lib/stores/hexmap.svelte';
   import { getCampaignName, setCampaignName } from '../../lib/stores/campaign.svelte';
+  import { getLastBackupAt } from '../../lib/stores/backupTracking.svelte';
+  import { exportCampaign } from '../../lib/campaignExport';
   import { CONDITIONS } from '../../lib/conditions';
   import { daysSince } from '../../lib/date';
 
   interface Props {
     onstartsession?: () => void;
     onnavigate: (screen: NavScreen) => void;
+    onselectresult?: (result: SearchResult) => void;
   }
 
-  let { onstartsession, onnavigate }: Props = $props();
+  let { onstartsession, onnavigate, onselectresult }: Props = $props();
 
   const party = getParty();
   const wounded = $derived(party.filter((m) => m.hp < m.max).length);
@@ -109,6 +115,44 @@
 
   const allClear = $derived(prepRows.every((row) => row.count === 0));
 
+  // -- Data safety (export reminder) -----------------------------------------
+  // See ROADMAP.md Phase 14's "Dashboard data-safety export reminder" for the
+  // exact cadence-aware heuristic this implements: it only ever fires once a
+  // real session is on record (a brand-new campaign on seed data alone has
+  // nothing irreplaceable to lose yet), and resets the moment `exportCampaign`
+  // (or a successful import) calls `markBackedUp()` — no dismiss/snooze state
+  // to persist, this is a pure `$derived` read of existing store data.
+  const sessions = getSessions();
+  const lastBackupAt = $derived(getLastBackupAt());
+  const sessionsSinceBackup = $derived(
+    sessions.filter((s) => !lastBackupAt || new Date(s.date) > new Date(lastBackupAt)).length,
+  );
+  const daysSinceBackup = $derived(lastBackupAt ? daysSince(lastBackupAt) : null);
+  const atRisk = $derived(
+    sessions.length > 0 &&
+      (lastBackupAt === null || sessionsSinceBackup >= 2 || (daysSinceBackup !== null && daysSinceBackup >= 14)),
+  );
+
+  let justExported = $state(false);
+
+  function handleExportNow() {
+    exportCampaign(); // also calls markBackedUp() internally — see campaignExport.ts
+    justExported = true;
+  }
+
+  // The confirmation is only ever meant to be a brief acknowledgement — once
+  // it's had a moment to register, let the card fall through to its
+  // already-recomputed `atRisk`/all-clear state (see the `justExported`
+  // check in the markup below) rather than pinning the confirmation message
+  // in place for the rest of the visit.
+  $effect(() => {
+    if (!justExported) return;
+    const timer = setTimeout(() => {
+      justExported = false;
+    }, 2500);
+    return () => clearTimeout(timer);
+  });
+
   // -- Campaign name (inline rename) -----------------------------------------
   // Matches the pencil-icon-to-edit pattern used elsewhere (e.g. beat/faction
   // editing), but reveals a plain text field in place rather than opening a
@@ -146,7 +190,7 @@
 </script>
 
 <div class="flex flex-col md:flex-row min-h-screen bg-[var(--bg)] text-[var(--text)]">
-  <AppSidebar active="overview" {onnavigate} {onstartsession} />
+  <AppSidebar active="overview" {onnavigate} {onstartsession} {onselectresult} />
 
   <!-- Main -->
   <main class="flex-1 p-[var(--sp-6)] max-w-[var(--content-max)] flex flex-col gap-[var(--sp-5)]">
@@ -265,6 +309,59 @@
               <Icon icon={ChevronRight} class="text-[var(--text-muted)] shrink-0" />
             </button>
           {/each}
+        </div>
+      {/if}
+    </Card>
+
+    <Card
+      eyebrow={$_('dashboard.backupCard.eyebrow')}
+      eyebrowHelp={$_('help.backup')}
+      title={$_('dashboard.backupCard.title')}
+      class="!rounded-[var(--radius-md)]"
+    >
+      {#snippet actions()}
+        {#if atRisk && !justExported}
+          <Button variant="ghost" size="sm" onclick={handleExportNow}>
+            {$_('dashboard.backupCard.exportNow')}
+          </Button>
+        {/if}
+      {/snippet}
+      {#if justExported}
+        <p class="py-6 text-center text-[length:var(--text-sm)] text-[var(--success)]" role="status">
+          {$_('settings.data.exportDone')}
+        </p>
+      {:else if atRisk}
+        <button
+          type="button"
+          class="w-full min-h-11 flex items-center gap-3 py-3 px-1 text-left cursor-pointer active:bg-[var(--surface-sunk)]"
+          onclick={() => onnavigate('settings')}
+        >
+          <span
+            class="grid place-items-center w-8 h-8 rounded-full shrink-0 bg-[var(--warning-tint)] text-[var(--warning)]"
+          >
+            <Icon icon={ShieldAlert} />
+          </span>
+          <span class="flex-1 min-w-0 text-[length:var(--text-body)]">
+            {#if lastBackupAt === null}
+              <span class="font-bold block">{$_('dashboard.backupCard.neverBackedUp')}</span>
+              <span class="text-[var(--text-muted)]">
+                {$_('dashboard.backupCard.neverBackedUpTrailing', { values: { count: sessions.length } })}
+              </span>
+            {:else}
+              <span class="font-bold block">
+                {$_('dashboard.backupCard.staleBackup', { values: { count: sessionsSinceBackup } })}
+              </span>
+              <span class="text-[var(--text-muted)]">
+                {$_('dashboard.backupCard.staleBackupTrailing', { values: { days: daysSinceBackup ?? 0 } })}
+              </span>
+            {/if}
+          </span>
+          <Icon icon={ChevronRight} class="text-[var(--text-muted)] shrink-0" />
+        </button>
+      {:else}
+        <div class="flex items-center justify-center gap-2 py-6 text-[var(--text-muted)] text-[length:var(--text-body)]">
+          <Icon icon={ShieldCheck} />
+          {$_('dashboard.backupCard.allClear')}
         </div>
       {/if}
     </Card>

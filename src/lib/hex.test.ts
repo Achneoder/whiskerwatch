@@ -6,6 +6,7 @@ import {
   gridCoords,
   gridViewBox,
   hexLabel,
+  neighbors,
   GRID_BOUNDS,
   HEX_SIZE,
 } from './hex';
@@ -76,5 +77,27 @@ describe('hex math', () => {
     // origin: column = 0 - (-2) = 2 → 'C'; row = 0 - (-2) + 1 = 3
     expect(hexLabel(0, 0)).toBe('C3');
     expect(hexLabel(GRID_BOUNDS.qMin, GRID_BOUNDS.rMin)).toBe('A1');
+  });
+
+  it('returns the 6 axial neighbors in a fixed, stable order', () => {
+    expect(neighbors(0, 0)).toEqual([
+      { q: 1, r: 0 },
+      { q: 1, r: -1 },
+      { q: 0, r: -1 },
+      { q: -1, r: 0 },
+      { q: -1, r: 1 },
+      { q: 0, r: 1 },
+    ]);
+  });
+
+  it('offsets neighbors relative to a non-origin coordinate', () => {
+    expect(neighbors(2, -1)).toEqual([
+      { q: 3, r: -1 },
+      { q: 3, r: -2 },
+      { q: 2, r: -2 },
+      { q: 1, r: -1 },
+      { q: 1, r: 0 },
+      { q: 2, r: 0 },
+    ]);
   });
 });

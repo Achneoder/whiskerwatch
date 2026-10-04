@@ -14,10 +14,12 @@
     Play,
     Languages,
     Settings,
+    Search,
   } from 'lucide-svelte';
   import { _ } from 'svelte-i18n';
   import Button from '../ui/Button.svelte';
   import Icon from '../ui/Icon.svelte';
+  import QuickFind, { type SearchResult } from '../ui/QuickFind.svelte';
   import { getTheme, toggleTheme, initTheme } from '../../lib/stores/theme.svelte';
   import { locale, setLocale, type SupportedLocale } from '../../lib/i18n';
 
@@ -37,13 +39,69 @@
     active: NavScreen;
     onnavigate: (screen: NavScreen) => void;
     onstartsession?: (() => void) | undefined;
+    /**
+     * Bubbles a quick-find entity selection up to `App.svelte`, which sets
+     * `pendingFocus` and navigates — see `App.svelte`'s `selectSearchResult`.
+     * Every screen forwards this through unchanged from its own prop of the
+     * same name (the same pass-through shape `onnavigate`/`onstartsession`
+     * already use everywhere), since `AppSidebar` — and so the search
+     * trigger — is shared chrome present on every screen, not just the six
+     * screens that know how to consume a `focusId`.
+     */
+    onselectresult?: ((result: SearchResult) => void) | undefined;
   }
 
-  let { active, onnavigate, onstartsession }: Props = $props();
+  let { active, onnavigate, onstartsession, onselectresult }: Props = $props();
 
   $effect(() => {
     initTheme();
   });
+
+  let quickFindOpen = $state(false);
+  let quickFindTrigger: HTMLElement | null = null;
+
+  function openQuickFind(event: MouseEvent) {
+    quickFindTrigger = event.currentTarget as HTMLElement;
+    quickFindOpen = true;
+  }
+
+  function closeQuickFind() {
+    quickFindOpen = false;
+    quickFindTrigger?.focus();
+  }
+
+  function handleQuickFindSelect(result: SearchResult) {
+    onselectresult?.(result);
+  }
+
+  function handleQuickFindJump(screen: NavScreen) {
+    onnavigate(screen);
+  }
+
+  /**
+   * `/` opens quick-find from anywhere a text input doesn't already have
+   * focus — desktop only (prep-mode convenience), never bound on
+   * touch-only viewports (no physical keyboard to type the shortcut on, and
+   * `/` is a real character the GM might need in a text field on a phone).
+   * `matchMedia` isn't implemented in this project's jsdom test environment
+   * (see AppSidebar.test.ts), so it's treated as "desktop" whenever the API
+   * itself is unavailable rather than silently disabling the shortcut under
+   * test.
+   */
+  function isDesktopViewport(): boolean {
+    if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return true;
+    return window.matchMedia('(min-width: 768px)').matches;
+  }
+
+  function handleGlobalKeydown(event: KeyboardEvent) {
+    if (event.key !== '/' || quickFindOpen || !isDesktopViewport()) return;
+    const target = event.target as HTMLElement | null;
+    const tag = target?.tagName;
+    if (tag === 'INPUT' || tag === 'TEXTAREA' || target?.isContentEditable) return;
+    event.preventDefault();
+    quickFindTrigger = null;
+    quickFindOpen = true;
+  }
 
   const nav: { screen: NavScreen; icon: typeof LayoutDashboard; key: string; enabled: boolean }[] = [
     { screen: 'overview', icon: LayoutDashboard, key: 'nav.overview', enabled: true },
@@ -63,6 +121,10 @@
   }
 </script>
 
+<svelte:window onkeydown={handleGlobalKeydown} />
+
+<QuickFind open={quickFindOpen} onclose={closeQuickFind} onselect={handleQuickFindSelect} onjump={handleQuickFindJump} />
+
 <!-- Desktop / tablet-landscape sidebar -->
 <aside
   class="hidden md:flex md:w-[var(--sidebar-w)] shrink-0 border-r border-[var(--border)] bg-[var(--surface)] py-[var(--sp-5)] px-[var(--sp-4)] flex-col gap-[var(--sp-5)]"
@@ -70,6 +132,15 @@
   <div class="font-[family-name:var(--font-display)] font-extrabold text-[22px] tracking-[-0.02em]">
     Whisker<span class="text-[var(--accent)]">watch</span>
   </div>
+  <button
+    type="button"
+    onclick={openQuickFind}
+    aria-label={$_('search.trigger')}
+    class="flex items-center gap-2.5 min-h-[var(--tap)] py-2 px-2.5 rounded-[var(--radius-md)] text-[length:var(--text-body)] text-left font-medium text-[var(--text-secondary)] cursor-pointer hover:bg-[var(--surface-raised)]"
+  >
+    <Icon icon={Search} />
+    {$_('search.trigger')}
+  </button>
   <nav class="flex flex-col gap-0.5">
     {#each nav as item (item.key)}
       <button
@@ -132,6 +203,14 @@
       Whisker<span class="text-[var(--accent)]">watch</span>
     </div>
     <div class="flex items-center gap-1.5 shrink-0">
+      <button
+        type="button"
+        aria-label={$_('search.trigger')}
+        onclick={openQuickFind}
+        class="grid place-items-center w-9 h-9 rounded-[var(--radius-md)] text-[var(--text-secondary)] hover:bg-[var(--surface-raised)] cursor-pointer"
+      >
+        <Icon icon={Search} />
+      </button>
       <button
         type="button"
         aria-label={$_('nav.settings')}

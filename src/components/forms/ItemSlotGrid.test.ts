@@ -137,18 +137,18 @@ describe('ItemSlotGrid', () => {
     expect(screen.getByRole('img', { name: '3 of 6 charges remaining' })).toBeInTheDocument();
   });
 
-  it('shows no Overburdened warning at exactly the 10-slot cap', () => {
+  it('shows no Encumbered warning at exactly the 10-slot cap', () => {
     const items = Array.from({ length: 10 }, (_, i) => makeItem({ id: `i${i}`, name: `Item ${i}`, slots: 1 }));
     render(ItemSlotGrid, { props: { items, onadd: vi.fn(), onremove: vi.fn(), onupdate: vi.fn() } });
 
-    expect(screen.queryByText('Overburdened.')).not.toBeInTheDocument();
+    expect(screen.queryByText('Encumbered.')).not.toBeInTheDocument();
   });
 
-  it('shows the Overburdened warning once over the 10-slot cap, without dropping or blocking anything', () => {
+  it('shows the Encumbered warning once over the 10-slot cap, without dropping or blocking anything', () => {
     const items = Array.from({ length: 11 }, (_, i) => makeItem({ id: `i${i}`, name: `Item ${i}`, slots: 1 }));
     render(ItemSlotGrid, { props: { items, onadd: vi.fn(), onremove: vi.fn(), onupdate: vi.fn() } });
 
-    expect(screen.getByText('Overburdened.')).toBeInTheDocument();
+    expect(screen.getByText('Encumbered.')).toBeInTheDocument();
     // Nothing is hidden or dropped — all 11 items still render as filled, tappable slots.
     for (const item of items) {
       expect(screen.getByRole('button', { name: `${item.name}, 1 slot, edit item` })).toBeInTheDocument();

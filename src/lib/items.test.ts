@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { tickCharge, splitSections, type Item } from './items';
+import { tickCharge, splitSections, isOverCapacity, capacity, MOUSE_LAYOUT, HIRELING_LAYOUT, type Item } from './items';
 
 function makeItem(overrides: Partial<Item> = {}): Item {
   return {
@@ -71,35 +71,44 @@ describe('tickCharge', () => {
 });
 
 describe('splitSections', () => {
-  it('packs items into paws up to its 4-slot budget, then overflows to body', () => {
-    const items = [
-      makeItem({ id: 'a', slots: 2 }),
-      makeItem({ id: 'b', slots: 2 }),
-      makeItem({ id: 'c', slots: 1 }),
-    ];
+  it('packs a mouse into 2 paws, then 2 body, then the pack', () => {
+    const items = ['a', 'b', 'c', 'd', 'e'].map((id) => makeItem({ id, slots: 1 }));
 
-    const { paws, body } = splitSections(items);
+    const { paws, body, pack } = splitSections(items);
 
     expect(paws.map((i) => i.id)).toEqual(['a', 'b']);
-    expect(body.map((i) => i.id)).toEqual(['c']);
+    expect(body.map((i) => i.id)).toEqual(['c', 'd']);
+    expect(pack.map((i) => i.id)).toEqual(['e']);
   });
 
   it('never splits a 2-slot item across sections', () => {
-    // 3 slots already used in paws, so a 2-slot item wouldn't fit (budget is 4)
-    // and should go entirely to body rather than partially filling paws.
-    const items = [
-      makeItem({ id: 'a', slots: 1 }),
-      makeItem({ id: 'b', slots: 2 }),
-      makeItem({ id: 'c', slots: 2 }),
-    ];
+    // One paw slot left, so the 2-slot item skips paws and goes to body.
+    const items = [makeItem({ id: 'a', slots: 1 }), makeItem({ id: 'b', slots: 2 }), makeItem({ id: 'c', slots: 1 })];
 
     const { paws, body } = splitSections(items);
 
-    expect(paws.map((i) => i.id)).toEqual(['a', 'b']);
-    expect(body.map((i) => i.id)).toEqual(['c']);
+    expect(paws.map((i) => i.id)).toEqual(['a', 'c']);
+    expect(body.map((i) => i.id)).toEqual(['b']);
+  });
+
+  it('puts encumbered overflow in the pack instead of dropping it', () => {
+    const items = Array.from({ length: 8 }, (_, i) => makeItem({ id: `i${i}`, slots: 1 }));
+
+    const { pack } = splitSections(items, HIRELING_LAYOUT);
+
+    expect(pack).toHaveLength(4);
+    expect(isOverCapacity(items, HIRELING_LAYOUT)).toBe(true);
+    expect(isOverCapacity(items)).toBe(false);
   });
 
   it('returns empty sections for an empty list', () => {
-    expect(splitSections([])).toEqual({ paws: [], body: [] });
+    expect(splitSections([])).toEqual({ paws: [], body: [], pack: [] });
+  });
+});
+
+describe('layouts', () => {
+  it('match the SRD: mice 10 slots, hirelings 6', () => {
+    expect(capacity(MOUSE_LAYOUT)).toBe(10);
+    expect(capacity(HIRELING_LAYOUT)).toBe(6);
   });
 });

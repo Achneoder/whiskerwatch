@@ -18,7 +18,7 @@ export type LiveSessionEvent =
   | { id: string; kind: 'conditionGained'; name: string; role: LiveSessionEventRole; condition: string }
   | { id: string; kind: 'strDrained'; name: string; role: LiveSessionEventRole; newStr: number }
   | { id: string; kind: 'advancement'; name: string; role: LiveSessionEventRole; newLevel: number }
-  | { id: string; kind: 'loyaltyFailed'; name: string };
+  | { id: string; kind: 'moraleFailed'; name: string };
 
 // Plain `Omit<Union, 'id'>` doesn't distribute over a discriminated union —
 // `keyof` on a union only sees the members' *common* keys, so it collapses
@@ -72,8 +72,8 @@ export function describeEvent(event: LiveSessionEvent): string {
       return `${event.name}'s STR drained to ${event.newStr}`;
     case 'advancement':
       return `${event.name} reached level ${event.newLevel}`;
-    case 'loyaltyFailed':
-      return `${event.name} failed a Loyalty save`;
+    case 'moraleFailed':
+      return `${event.name} failed a morale save`;
   }
 }
 
@@ -84,7 +84,7 @@ export function groupForEvent(event: LiveSessionEvent): 'beats' | 'factions' | '
       return 'beats';
     case 'factionClockChanged':
       return 'factions';
-    case 'loyaltyFailed':
+    case 'moraleFailed':
       return 'hirelings';
     default:
       return event.role === 'hireling' ? 'hirelings' : 'party';

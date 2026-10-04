@@ -1,8 +1,8 @@
 /**
  * The item/slot-inventory model shared between `PartyMember` and
- * `Hireling`. Both use one flat list of items and the same fixed 10-slot
- * cap (6 "body" + 4 "paws" is a UI/fiction convention over this single
- * array — hirelings are not reduced). This module is deliberately narrow,
+ * `Hireling`. Both use one flat list of items; the paw/body/pack split is a
+ * UI convention over that single array, sized by an `InventoryLayout`
+ * (SRD: mice 2/2/6 = 10 slots, hirelings 2/2/2 = 6). This module is deliberately narrow,
  * mirroring `combat.ts`: pure types + pure list-transform helpers, no
  * top-level rune state. The per-store `addMemberItem`/`addHirelingItem`
  * (etc.) wrappers in `party.svelte.ts`/`hirelings.svelte.ts` call these
@@ -23,8 +23,22 @@ export interface Item {
   notes: string;
 }
 
-/** Fixed Mausritter slot cap: 6 body + 4 paws, identical for every mouse (player or hireling). */
-export const MAX_SLOTS = 10;
+/** How many paw, body and pack slots an inventory has (SRD "Inventory slots" / "Hirelings"). */
+export interface InventoryLayout {
+  paws: number;
+  body: number;
+  pack: number;
+}
+
+export const MOUSE_LAYOUT: InventoryLayout = { paws: 2, body: 2, pack: 6 };
+export const HIRELING_LAYOUT: InventoryLayout = { paws: 2, body: 2, pack: 2 };
+
+export function capacity(layout: InventoryLayout): number {
+  return layout.paws + layout.body + layout.pack;
+}
+
+/** A player mouse's slot total — the default for every capacity check. */
+export const MAX_SLOTS = capacity(MOUSE_LAYOUT);
 
 /** Sum of `slots` across every item carried — the number the cap is checked against. */
 export function usedSlots(items: Item[]): number {
@@ -32,13 +46,13 @@ export function usedSlots(items: Item[]): number {
 }
 
 /**
- * Whether this list exceeds `MAX_SLOTS`. This is purely informational
- * (a UI warning banner) — Mausritter's "overburdened" is not a status
- * effect/condition, and nothing in this module or its callers should ever
- * use this to block adding an item.
+ * Whether this list exceeds the layout's slots, i.e. the carrier is
+ * *encumbered* (SRD: can't run, Disadvantage on all saves). Informational
+ * only (a UI warning banner) — the SRD allows carrying more, so nothing in
+ * this module or its callers should ever use this to block adding an item.
  */
-export function isOverCapacity(items: Item[]): boolean {
-  return usedSlots(items) > MAX_SLOTS;
+export function isOverCapacity(items: Item[], layout: InventoryLayout = MOUSE_LAYOUT): boolean {
+  return usedSlots(items) > capacity(layout);
 }
 
 export function addItem(items: Item[], input: Omit<Item, 'id'>): Item[] {
@@ -68,31 +82,37 @@ export function tickCharge(items: Item[], itemId: string): Item[] {
   });
 }
 
-/** Fixed split of the one shared `MAX_SLOTS` cap — 4 quick-access "paws" slots, 6 "body" slots. */
-export const PAWS_SLOTS = 4;
-export const BODY_SLOTS = MAX_SLOTS - PAWS_SLOTS;
+export type InventorySection = 'paws' | 'body' | 'pack';
 
 /**
- * Splits the one flat `items` array into the two visual sections shared by
- * `ItemSlotGrid` (roster prep editor) and `LiveSessionInventoryModal` (live
- * table view) — one source of truth for the packing rule so both stay in
- * sync. Items are walked in order and packed into "paws" (4-slot budget)
- * until they no longer fit, then everything else renders in "body" (6-slot
- * budget). A 2-slot item is never split across sections. If the mouse is
- * overburdened, the overflow just renders as extra filled body cells beyond
- * its nominal 6 — nothing is ever hidden or dropped.
+ * Splits the one flat `items` array into the three visual sections shared
+ * by `ItemSlotGrid` (roster prep editor) and `LiveSessionInventoryModal`
+ * (live table view) — one source of truth for the packing rule so both stay
+ * in sync. Items are walked in order and packed into paws, then body, until
+ * each budget is full; everything else goes in the pack. A 2-slot item is
+ * never split across sections. If the carrier is encumbered, the overflow
+ * just renders as extra filled pack cells beyond its nominal size —
+ * nothing is ever hidden or dropped.
  */
-export function splitSections(items: Item[]): { paws: Item[]; body: Item[] } {
+export function splitSections(
+  items: Item[],
+  layout: InventoryLayout = MOUSE_LAYOUT,
+): Record<InventorySection, Item[]> {
   const paws: Item[] = [];
   const body: Item[] = [];
-  let runningPawsSlots = 0;
+  const pack: Item[] = [];
+  let pawsUsed = 0;
+  let bodyUsed = 0;
   for (const item of items) {
-    if (runningPawsSlots + item.slots <= PAWS_SLOTS) {
+    if (pawsUsed + item.slots <= layout.paws) {
       paws.push(item);
-      runningPawsSlots += item.slots;
-    } else {
+      pawsUsed += item.slots;
+    } else if (bodyUsed + item.slots <= layout.body) {
       body.push(item);
+      bodyUsed += item.slots;
+    } else {
+      pack.push(item);
     }
   }
-  return { paws, body };
+  return { paws, body, pack };
 }

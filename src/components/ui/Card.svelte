@@ -1,9 +1,12 @@
 <script lang="ts">
+  import HelpTip from './HelpTip.svelte';
   import type { Snippet } from 'svelte';
 
   interface Props {
     title?: string;
     eyebrow?: string;
+    /** Optional explanation shown in a HelpTip next to the eyebrow. */
+    eyebrowHelp?: string;
     actions?: Snippet;
     footer?: Snippet | undefined;
     interactive?: boolean;
@@ -16,6 +19,7 @@
   let {
     title,
     eyebrow,
+    eyebrowHelp,
     actions,
     footer,
     interactive = false,
@@ -54,7 +58,14 @@
     <div class="flex items-start justify-between gap-[var(--sp-3)] pt-[var(--pad-card)] px-[var(--pad-card)]">
       <div class="min-w-0">
         {#if eyebrow}
-          <div class="ww-label mb-1">{eyebrow}</div>
+          {#if eyebrowHelp}
+            <div class="flex items-center gap-1.5 mb-1">
+              <span class="ww-label">{eyebrow}</span>
+              <HelpTip text={eyebrowHelp} label={eyebrow} />
+            </div>
+          {:else}
+            <div class="ww-label mb-1">{eyebrow}</div>
+          {/if}
         {/if}
         {#if title}
           <div

@@ -3,7 +3,7 @@
     dice?: number[];
     notation?: string;
     total?: number | null;
-    outcome?: 'success' | 'fail' | 'partial' | 'neutral' | 'hostile' | 'unfriendly' | 'friendly' | 'helpful';
+    outcome?: 'success' | 'fail' | 'partial' | 'neutral' | 'hostile' | 'unfriendly' | 'unsure' | 'talkative' | 'helpful';
     label?: string;
     size?: 'md' | 'live';
   }
@@ -30,11 +30,12 @@
     // Reaction-roll bands (see `rollReaction`/`ReactionResult.svelte`) — five
     // SRD tones rather than pass/fail, so each band gets its own skin. Hostile
     // reuses the "fail" danger tone, helpful reuses "success", unfriendly
-    // reuses "partial"'s warning tone; friendly is the one genuinely new tone
-    // (accent), and reaction's neutral band shares the existing neutral skin.
+    // reuses "partial"'s warning tone; talkative is the one genuinely new tone
+    // (accent), and unsure shares the existing neutral skin.
     hostile: { fg: 'var(--danger-hover)', bg: 'var(--danger-tint)', word: null },
     unfriendly: { fg: 'var(--warning)', bg: 'var(--warning-tint)', word: null },
-    friendly: { fg: 'var(--accent)', bg: 'var(--accent-tint)', word: null },
+    unsure: { fg: 'var(--text-secondary)', bg: 'var(--surface-sunk)', word: null },
+    talkative: { fg: 'var(--accent)', bg: 'var(--accent-tint)', word: null },
     helpful: { fg: 'var(--success)', bg: 'var(--success-tint)', word: null },
   } as const;
 

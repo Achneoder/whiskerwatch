@@ -30,10 +30,12 @@ export interface PartyMember {
 const STORAGE_KEY = 'whiskerwatch:party';
 
 /**
- * Mausritter awards XP for *spending* pips during downtime (carousing,
- * gear, keepsakes), not for kills: 1 XP per 10 pips spent.
+ * SRD "Advancement": the main XP source is treasure brought back to safety
+ * (1 XP per pip, split across the party). On top of that, pips spent
+ * *selflessly* on improvements for the whole community earn 1 XP per 10.
+ * This constant is that bonus rate only.
  */
-export const DOWNTIME_XP_PER_PIP = 0.1;
+export const COMMUNITY_XP_PER_PIP = 0.1;
 
 /**
  * Level-up XP thresholds (SRD "Advancement" table). Irregular through
@@ -294,7 +296,7 @@ export function tickMemberItemCharge(id: string, itemId: string): void {
   list.update(id, { items: tickCharge(member.items, itemId) });
 }
 
-export interface DowntimeResult {
+export interface CommunityXpResult {
   xpGained: number;
   totalXp: number;
   leveledUp: boolean;
@@ -302,17 +304,17 @@ export interface DowntimeResult {
 }
 
 /**
- * Mausritter awards XP for pips *spent* in downtime (carousing/gear/
- * keepsakes), not kills.
+ * Awards the SRD's bonus XP for pips spent selflessly on community
+ * improvements (1 XP per 10 pips). Not the treasure-recovery XP.
  */
-export function spendDowntime(id: string, pipsSpent: number): DowntimeResult | null {
+export function spendForCommunity(id: string, pipsSpent: number): CommunityXpResult | null {
   const member = list.items.find((m) => m.id === id);
   if (!member) return null;
   // Snapshot the previous level before `list.update` mutates the same
   // reactive object `member` points to — reading `member.level` again after
   // that call would see the *new* value, not the one we're comparing against.
   const previousLevel = member.level;
-  const xpGained = Math.round(Math.max(0, pipsSpent) * DOWNTIME_XP_PER_PIP);
+  const xpGained = Math.round(Math.max(0, pipsSpent) * COMMUNITY_XP_PER_PIP);
   const totalXp = member.xp + xpGained;
   const newLevel = Math.max(previousLevel, levelForXp(totalXp));
   list.update(id, { xp: totalXp, level: newLevel });

@@ -9,6 +9,7 @@ browser. No account, no server, no signup: open it and start prepping.
 - 📱 **Table-ready** — phone, tablet, or laptop
 - 🐭 **Rules-accurate** to Mausritter stat blocks
 - 🇬🇧 🇩🇪 **English & German**
+- ❓ **Rules help built in** — tap the small `?` next to any rules-heavy field
 
 Screenshots below use the app's built-in sample campaign ("My Campaign") to show each screen
 with real content.
@@ -26,6 +27,7 @@ with real content.
 - [Sessions](#sessions)
 - [Timeline](#timeline)
 - [Settings & your data](#settings--your-data)
+- [Finding things & getting help](#finding-things--getting-help)
 - [At the table, on a phone](#at-the-table-on-a-phone)
 
 ---
@@ -48,6 +50,9 @@ close to boiling over, and what needs attention before your next session.
   progress without leaving the dashboard.
 - Click **Start session** (bottom of the sidebar) any time you're ready to move into Live Session
   mode.
+- A **Data Safety** card appears once you've logged 2+ sessions or gone 14+ days without exporting
+  — with an **Export now** button right on the card. Export regularly and you'll never see it;
+  there's no dismiss button because it disappears by itself the moment you back up.
 - Click the pencil next to the campaign name to rename it in place — handy the first time you set
   up a campaign, or whenever the adventure outgrows "My Campaign."
 
@@ -64,6 +69,13 @@ data the Dashboard and Live Session screens read from.
   replacement after a death, or an NPC hired mid-adventure.
 - Conditions like `Frightened` or `Hungry & Thirsty` and permanent **Scars** show inline, so you
   don't need to flip to a character sheet mid-scene.
+- **Inventory follows the rulebook.** A mouse has 10 slots — 2 paw, 2 body, 6 pack — and a
+  hireling has 6 (2 paw, 2 body, 2 pack). Armour and two-handed weapons take 2 slots. Carry more
+  than you have room for and the form flags the mouse as **encumbered** (no running,
+  Disadvantage on every save); it warns but never stops you adding items.
+- **Hirelings** have a daily wage, a **WIL** score, and a **Loyal or well-paid** toggle. Their
+  morale saves roll against WIL, with Advantage when that toggle is on — the Roster row shows a
+  **Morale** pill with their WIL and a **Loyal** tag.
 - **Export campaign** / **Import campaign** (top right) save or restore your entire campaign as
   one JSON file — the same controls also live on the Settings screen.
 
@@ -136,7 +148,13 @@ screen's "random encounter by hex" roll.
 - Use the terrain legend checkboxes at the top to filter the map down to one terrain type when
   you're prepping a specific region.
 - A hex with an encounter prepped shows up in the Dashboard's Session Prep checklist as "hexes
-  with encounters ready."
+  with encounters ready." Each prepped creature has a **weight** — weight 3 comes up three times as
+  often as weight 1.
+- **Party is here** — open a hex and tap **Set here** to place the party on the map before a
+  hex crawl starts. A paw-print marker shows where they are; from then on the party moves from the
+  Watch card in Live Session. (Shown only when exactly one adventure is active.)
+- Terrain sets travel speed: crossing a hex takes 1 watch on foot, or 2 through forest or hills.
+  Water hexes can't be entered on foot.
 
 ## Generators
 
@@ -166,6 +184,27 @@ things.
 > highlighted ability score, and **Roll save**. No need to leave the HP tracker to make a check.
 
 - Hit **Hurt** on any party or hireling card to log damage against their current HP in one tap.
+- **Encounters you can fight.** **Roll an encounter** draws from the party's current hex and puts
+  a tracked copy of the creature on the card with its own HP — **Hurt**/**Heal** it just like a
+  mouse, and mark it **Defeated** or **Remove** it when it's done. Facing a group? Tap
+  **+ Add another** for each extra creature. **Roll Reaction** sets how they greet the party.
+- **Hand items over.** Tap a mouse's **Bag**, pick an item, and **Move** it to another mouse or
+  hireling — post-fight loot or "Wren hands Pip the rope." Each row shows the recipient's slots
+  (10 for a mouse, 6 for a hireling); if the item would leave them encumbered you get a warning,
+  never a block.
+- **Hireling morale.** When a hireling is stressed, unpaid or unfed, or ordered into more danger
+  than they signed on for, tap the **Morale** pill on their card (or **Morale** in the docked
+  roller). It rolls a d20 WIL save — 2d20 keep-lowest for a loyal or well-paid hireling — and
+  tells you whether they **stay** or **flee**. **Pay day** lists every hireling's wage, lets you
+  tick off who's been paid, and offers the same morale save for anyone left unpaid.
+- **Reaction rolls** use the rulebook's results — Hostile, Unfriendly, Unsure, Talkative,
+  Helpful — each with the question to answer at the table ("What could win them over?").
+- **Watch card (hex crawl).** Tracks the day and which of the four watches it is. Each tap spends
+  one watch: **Stay put**, **Forage** (rolls d3 rations and lets you pick whose bag they go into),
+  or move to a neighbouring hex — forest and hills take two watches. Morning and evening watches
+  roll an encounter check automatically, and a hit feeds straight into the Encounter card. Go a full
+  day without resting and the card offers to apply **Exhausted** to the party; it never does this
+  without asking.
 - Faction clocks pinned to this adventure's active factions sit at the top, so a triggering clock
   is never a surprise.
 - **End Session** (top right) closes out the session and can hand off directly into drafting a
@@ -216,13 +255,37 @@ screen is where you back it up.
 > ⚠️ Clearing your browser's site data, using a private/incognito window, or switching devices
 > will lose your campaign. **Export a backup after every session.**
 
-- **Export** downloads one JSON file with everything: parties, hirelings, adventures, bestiary,
-  factions, hex map, and session logs.
-- **Import** restores from that file — useful for moving to a new device or browser. It replaces
-  everything currently in the app, so export first if you want to keep the current state as well.
+- **Export** saves one JSON file with everything: parties, hirelings, adventures, bestiary,
+  factions, hex map, session logs, and the timeline. On a phone or tablet it opens the share menu
+  (AirDrop, Nearby Share, messaging apps…) so you can send the campaign straight to another
+  device; elsewhere it downloads the file.
+- **Import** restores from that file — useful for moving to a new device or browser. Before
+  anything is replaced you get a preview of what's in the file (campaign, export date, sessions,
+  mice, adventures), plus a warning if the file is *older* than what's already on this device.
+  Importing replaces everything currently in the app, so export first if you want to keep the
+  current state as well.
+- Exporting or importing both count as a backup, which clears the Dashboard's Data Safety card.
 - **Reset everything** wipes the campaign and starts fresh. This can't be undone.
 - Appearance (light/dark "burrow") and language (English/Deutsch) apply immediately across the
   whole app.
+
+## Finding things & getting help
+
+*Anywhere · Quick-find and help tips*
+
+- **Quick-find** — tap **Search campaign** (top of the sidebar, or the search icon in the phone
+  top bar) and type part of a name. It searches mice, hirelings, beats, bestiary entries,
+  factions, hexes, and sessions. Tap a result to jump to it with its edit form already open. On a
+  desktop, press `/` to open it from anywhere. With nothing typed, it offers shortcuts to every
+  screen.
+- **Help tips** — a small `?` sits next to fields and cards where Mausritter rules matter: HP,
+  Pips, hireling Wage, WIL and the Loyal toggle, creature Armor, inventory slots and usage, faction disposition
+  and clocks, hex terrain and encounter weights, the Watch card, reaction rolls, and the Data
+  Safety card. Tap it for a one- or two-sentence reminder; tap again, tap elsewhere, or press
+  Escape to close it. On a laptop, hovering or tabbing onto the `?` shows it too. For the fuller
+  picture, open the **Rules reference** drawer (book icon in the Live Session header and on the
+  Generators screen). It covers saves, damage and death, conditions, inventory and usage dots,
+  reaction rolls, advancement (XP from treasure brought to safety), and hirelings.
 
 ## At the table, on a phone
 

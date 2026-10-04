@@ -1,4 +1,5 @@
 <script lang="ts">
+  import HelpTip from '../ui/HelpTip.svelte';
   import { Swords } from 'lucide-svelte';
   import { _ } from 'svelte-i18n';
   import Card from '../ui/Card.svelte';
@@ -122,9 +123,14 @@
             </p>
           {/if}
 
-          <Button variant="primary" size="live" onclick={onrollreaction}>
-            {$_('liveSession.reaction.roll')}
-          </Button>
+          <div class="flex items-center gap-[var(--sp-2)]">
+            <div class="flex-1 min-w-0 flex flex-col">
+              <Button variant="primary" size="live" onclick={onrollreaction}>
+                {$_('liveSession.reaction.roll')}
+              </Button>
+            </div>
+            <HelpTip text={$_('help.reaction')} label={$_('help.reactionLabel')} />
+          </div>
           {#if reactionResult}
             <ReactionResult result={reactionResult} size="live" />
           {/if}

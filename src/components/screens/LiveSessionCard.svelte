@@ -19,8 +19,10 @@
     maxStr: number;
     conditions: ConditionName[];
     items: Item[];
-    /** Only set for hirelings — party mice have no Loyalty score, so this pill doesn't render for them. */
-    loyalty?: number;
+    /** Total inventory slots — defaults to a player mouse's 10; hirelings have 6. */
+    slotCapacity?: number;
+    /** Only set for hirelings — mice don't make morale saves, so this pill doesn't render for them. */
+    morale?: { wil: number; advantage: boolean };
   }
 
   interface Notice {
@@ -42,7 +44,7 @@
     onrequestdeath: () => void;
     ondismissnotice: () => void;
     oninventoryopen: () => void;
-    onrollloyaltysave?: () => void;
+    onrollmoralesave?: () => void;
   }
 
   let {
@@ -58,17 +60,20 @@
     onrequestdeath,
     ondismissnotice,
     oninventoryopen,
-    onrollloyaltysave,
+    onrollmoralesave,
   }: Props = $props();
 
   const fatal = $derived(member.str === 0);
   const showStrBar = $derived(member.hp === 0 || member.str < member.maxStr);
   const chips = [1, 2, 3, 4, 5, 6];
   const usedItemSlots = $derived(usedSlots(member.items));
-  const bagAria = $derived($_('liveSession.bagAria', { values: { name: member.name, used: usedItemSlots, max: MAX_SLOTS } }));
-  const loyaltyAria = $derived(
-    member.loyalty != null
-      ? $_('liveSession.loyaltySaveAria', { values: { name: member.name, loyalty: member.loyalty } })
+  const slotCapacity = $derived(member.slotCapacity ?? MAX_SLOTS);
+  const bagAria = $derived($_('liveSession.bagAria', { values: { name: member.name, used: usedItemSlots, max: slotCapacity } }));
+  const moraleAria = $derived(
+    member.morale != null
+      ? $_(member.morale.advantage ? 'liveSession.moraleSaveAriaAdv' : 'liveSession.moraleSaveAria', {
+          values: { name: member.name, wil: member.morale.wil },
+        })
       : undefined,
   );
 
@@ -123,20 +128,20 @@
     </div>
     <Tag size="sm">{member.role}</Tag>
     <div class="min-h-[var(--tap)] flex items-center">
-      <StatusPill size="sm" count={usedItemSlots} of={MAX_SLOTS} onclick={oninventoryopen} ariaLabel={bagAria}>
+      <StatusPill size="sm" count={usedItemSlots} of={slotCapacity} onclick={oninventoryopen} ariaLabel={bagAria}>
         {$_('liveSession.bag')}
       </StatusPill>
     </div>
-    {#if member.loyalty != null}
+    {#if member.morale != null}
       <div class="min-h-[var(--tap)] flex items-center">
         <StatusPill
           tone="accent"
           size="sm"
-          count={member.loyalty}
-          onclick={() => onrollloyaltysave?.()}
-          ariaLabel={loyaltyAria}
+          count={member.morale.wil}
+          onclick={() => onrollmoralesave?.()}
+          ariaLabel={moraleAria}
         >
-          {$_('roster.form.loyalty')}
+          {$_('liveSession.morale')}
         </StatusPill>
       </div>
     {/if}

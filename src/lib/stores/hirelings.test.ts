@@ -25,7 +25,7 @@ function hireling(overrides: Partial<Hireling> = {}): Omit<Hireling, 'id'> {
     maxStr: 10,
     dex: 10,
     wil: 10,
-    loyalty: 4,
+    loyal: false,
     wage: 5,
     notes: '',
     status: 'active' as const,
@@ -156,6 +156,9 @@ describe('hirelings store', () => {
       expect(migrated.scars).toEqual([]);
       expect(migrated.conditions).toEqual([]);
       expect(migrated.wage).toBe(0);
+      // The pre-SRD 2d6 `loyalty` score has no SRD equivalent and is dropped.
+      expect(migrated.loyal).toBe(false);
+      expect('loyalty' in migrated).toBe(false);
     });
 
     it('maps recognizable legacy free-text conditions to the fixed vocabulary', () => {

@@ -40,10 +40,10 @@ When('the GM backs out of the move picker', async function (this: WhiskerwatchWo
 });
 
 Then(
-  "the GM should see the overburdened warning next to {string}",
+  "the GM should see the encumbered warning next to {string}",
   async function (this: WhiskerwatchWorld, recipientName: string) {
     const row = inventoryModal(this.page).getByRole('button', { name: new RegExp(recipientName) });
-    await row.getByText('will be overburdened').waitFor({ state: 'visible' });
+    await row.getByText('will be encumbered').waitFor({ state: 'visible' });
   },
 );
 

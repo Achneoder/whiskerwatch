@@ -49,7 +49,7 @@ interface TestProps {
   onrequestdeath: () => void;
   ondismissnotice: () => void;
   oninventoryopen: () => void;
-  onrollloyaltysave?: () => void;
+  onrollmoralesave?: () => void;
 }
 
 function baseProps(overrides: Partial<TestProps> = {}): TestProps {
@@ -66,7 +66,7 @@ function baseProps(overrides: Partial<TestProps> = {}): TestProps {
     onrequestdeath: vi.fn(),
     ondismissnotice: vi.fn(),
     oninventoryopen: vi.fn(),
-    onrollloyaltysave: vi.fn(),
+    onrollmoralesave: vi.fn(),
     ...overrides,
   };
 }
@@ -214,23 +214,35 @@ describe('LiveSessionCard', () => {
     expect(oninventoryopen).toHaveBeenCalledOnce();
   });
 
-  it('shows a loyalty pill and rolls a loyalty save on tap when the member has a loyalty score', async () => {
-    const onrollloyaltysave = vi.fn();
+  it('shows a morale pill and rolls a morale save on tap for a hireling', async () => {
+    const onrollmoralesave = vi.fn();
     render(LiveSessionCard, {
-      props: baseProps({ member: member({ loyalty: 9 }), onrollloyaltysave }),
+      props: baseProps({ member: member({ morale: { wil: 9, advantage: false } }), onrollmoralesave }),
     });
 
-    const loyaltyButton = screen.getByRole('button', { name: /roll a loyalty save for pip, loyalty 9/i });
-    expect(loyaltyButton).toHaveTextContent('9');
+    const moraleButton = screen.getByRole('button', { name: /roll a morale save for pip, wil 9$/i });
+    expect(moraleButton).toHaveTextContent('9');
 
-    await fireEvent.click(loyaltyButton);
+    await fireEvent.click(moraleButton);
 
-    expect(onrollloyaltysave).toHaveBeenCalledOnce();
+    expect(onrollmoralesave).toHaveBeenCalledOnce();
   });
 
-  it('does not show a loyalty pill for a member with no loyalty score (e.g. party mice)', () => {
+  it('labels a loyal hireling\'s morale save as rolled with Advantage', () => {
+    render(LiveSessionCard, { props: baseProps({ member: member({ morale: { wil: 9, advantage: true } }) }) });
+
+    expect(screen.getByRole('button', { name: /roll a morale save for pip, wil 9, with advantage/i })).toBeInTheDocument();
+  });
+
+  it('does not show a morale pill for a party mouse', () => {
     render(LiveSessionCard, { props: baseProps() });
 
-    expect(screen.queryByText('Loyalty')).not.toBeInTheDocument();
+    expect(screen.queryByText('Morale')).not.toBeInTheDocument();
+  });
+
+  it('shows a hireling\'s smaller bag capacity on the bag pill', () => {
+    render(LiveSessionCard, { props: baseProps({ member: member({ slotCapacity: 6 }) }) });
+
+    expect(screen.getByRole('button', { name: /0 of 6 slots used/i })).toBeInTheDocument();
   });
 });

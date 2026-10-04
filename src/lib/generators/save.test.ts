@@ -1,5 +1,5 @@
 import { describe, expect, it, vi, afterEach } from 'vitest';
-import { rollSave, rollLoyaltySave } from './save';
+import { rollSave, rollMoraleSave } from './save';
 
 /**
  * `rollSave` rolls via `rollDice(1, 20)`, which computes
@@ -52,47 +52,29 @@ describe('rollSave', () => {
   });
 });
 
-/**
- * `rollLoyaltySave` rolls via `rollDice(2, 6)`, which draws two independent
- * `1 + Math.floor(Math.random() * 6)` values. Queue two mocked `Math.random`
- * results (one per die) to land on a specific 2d6 pair deterministically.
- */
-function mockD6Pair(d1: number, d2: number) {
+/** Queue specific d20 results for successive `rollDice` draws. */
+function mockD20Sequence(...results: number[]) {
   const spy = vi.spyOn(Math, 'random');
-  spy.mockReturnValueOnce((d1 - 1) / 6 + 0.0001);
-  spy.mockReturnValueOnce((d2 - 1) / 6 + 0.0001);
+  for (const r of results) spy.mockReturnValueOnce((r - 1) / 20 + 0.0001);
 }
 
-describe('rollLoyaltySave', () => {
+describe('rollMoraleSave', () => {
   afterEach(() => {
     vi.restoreAllMocks();
   });
 
-  it('passes when the 2d6 total is under the loyalty score', () => {
-    mockD6Pair(2, 3);
-    const result = rollLoyaltySave(10);
-
-    expect(result).toEqual({ dice: [2, 3], roll: 5, score: 10, passed: true });
+  it('rolls a single d20 against WIL without Advantage', () => {
+    mockD20Sequence(7);
+    expect(rollMoraleSave(7, false)).toEqual({ dice: [7], roll: 7, score: 7, advantage: false, passed: true });
   });
 
-  it('passes when the total exactly equals the score (roll-under is inclusive)', () => {
-    mockD6Pair(4, 3);
-    const result = rollLoyaltySave(7);
-
-    expect(result).toEqual({ dice: [4, 3], roll: 7, score: 7, passed: true });
+  it('fails when the d20 is over WIL', () => {
+    mockD20Sequence(12);
+    expect(rollMoraleSave(7, false).passed).toBe(false);
   });
 
-  it('fails when the total is over the score', () => {
-    mockD6Pair(6, 6);
-    const result = rollLoyaltySave(10);
-
-    expect(result).toEqual({ dice: [6, 6], roll: 12, score: 10, passed: false });
-  });
-
-  it('always fails when the score is below the minimum possible roll', () => {
-    mockD6Pair(1, 1);
-    const result = rollLoyaltySave(1);
-
-    expect(result.passed).toBe(false);
+  it('rolls 2d20 and keeps the lowest with Advantage', () => {
+    mockD20Sequence(15, 4);
+    expect(rollMoraleSave(7, true)).toEqual({ dice: [15, 4], roll: 4, score: 7, advantage: true, passed: true });
   });
 });

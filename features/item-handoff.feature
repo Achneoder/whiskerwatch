@@ -21,7 +21,7 @@ Feature: Item hand-off between party members in Live Session
     Then "Pip"'s bag should show "Torch"
     And "Wren"'s bag should not show "Torch"
 
-  Scenario: A move to an already-full mouse succeeds with a non-blocking overburdened warning
+  Scenario: A move to an already-full mouse succeeds with a non-blocking encumbered warning
     Given the GM opens "Pip" to edit
     And the GM adds 10 items to the inventory
     And the GM saves the mouse
@@ -29,7 +29,7 @@ Feature: Item hand-off between party members in Live Session
     And I start a live session
     When the GM opens "Wren"'s bag
     And the GM taps the move control on "Torch"
-    Then the GM should see the overburdened warning next to "Pip"
+    Then the GM should see the encumbered warning next to "Pip"
     When the GM hands the item to "Pip"
     Then "Pip"'s bag should show "Torch"
 

@@ -5,19 +5,19 @@ function mouseCard(world: WhiskerwatchWorld, name: string) {
   return world.page.getByTestId(`mouse-card-${name}`);
 }
 
-When('the GM rolls a loyalty save for {string}', async function (this: WhiskerwatchWorld, name: string) {
+When('the GM rolls a morale save for {string}', async function (this: WhiskerwatchWorld, name: string) {
   await mouseCard(this, name)
-    .getByRole('button', { name: /roll a loyalty save for/i })
+    .getByRole('button', { name: /roll a morale save for/i })
     .click();
 });
 
-Then('I should see a loyalty save result showing a pass or a fail', async function (this: WhiskerwatchWorld) {
-  await this.page.getByText(/Loyalty save: \d+ vs \d+ — (Passed|Failed)/).waitFor({ state: 'visible' });
+Then('I should see a morale save result showing whether they stay or flee', async function (this: WhiskerwatchWorld) {
+  await this.page.getByText(/Morale save: \d+ vs WIL \d+ — (Stays|Flees)/).waitFor({ state: 'visible' });
 });
 
-Then('{string} should not show a loyalty pill', async function (this: WhiskerwatchWorld, name: string) {
+Then('{string} should not show a morale pill', async function (this: WhiskerwatchWorld, name: string) {
   await mouseCard(this, name)
-    .getByRole('button', { name: /roll a loyalty save for/i })
+    .getByRole('button', { name: /roll a morale save for/i })
     .waitFor({ state: 'hidden' });
 });
 
@@ -47,12 +47,12 @@ Then('Pay Day should show {string} marked {string}', async function (this: Whisk
   await payDayModal(this).getByText(status, { exact: true }).waitFor({ state: 'visible' });
 });
 
-When('the GM rolls the inline loyalty check for {string} in Pay Day', async function (this: WhiskerwatchWorld, _name: string) {
-  await payDayModal(this).getByRole('button', { name: /roll loyalty save/i }).click();
+When('the GM rolls the inline morale save for {string} in Pay Day', async function (this: WhiskerwatchWorld, _name: string) {
+  await payDayModal(this).getByRole('button', { name: /roll morale save/i }).click();
 });
 
-Then('Pay Day should show a loyalty save result for {string}', async function (this: WhiskerwatchWorld, _name: string) {
+Then('Pay Day should show a morale save result for {string}', async function (this: WhiskerwatchWorld, _name: string) {
   await payDayModal(this)
-    .getByText(/Loyalty save: \d+ vs \d+ — (Passed|Failed)/)
+    .getByText(/Morale save: \d+ vs WIL \d+ — (Stays|Flees)/)
     .waitFor({ state: 'visible' });
 });

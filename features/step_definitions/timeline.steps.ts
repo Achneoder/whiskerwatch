@@ -9,8 +9,8 @@ function beatRow(page: Page, title: string): Locator {
 
 When('the GM completes the {string} beat', async function (this: WhiskerwatchWorld, title: string) {
   // The row's status pill is the first button in the row and cycles Planned → Active →
-  // Done on tap; the seed beat used in this scenario starts "Active" so a single tap
-  // is enough to reach "Done".
+  // Done on tap; a single tap only reaches "Done" from "Active", so the beat must be
+  // created active first (see "the GM adds an active beat titled ...").
   await beatRow(this.page, title).getByRole('button').first().click();
 });
 

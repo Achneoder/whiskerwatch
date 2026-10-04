@@ -6,7 +6,7 @@ Feature: Session prep checklist
   Background:
     Given I open Whiskerwatch
     And I navigate to the "Adventure" screen
-    And the GM adds a beat titled "Find the tunnel entrance" to "The granary raid"
+    And the GM adds an active beat titled "Find the tunnel entrance" to "The granary raid"
     And I navigate to the "Overview" screen
 
   Scenario: The Session Prep panel reflects real campaign state and jumps straight to the relevant screen
@@ -15,3 +15,10 @@ Feature: Session prep checklist
     And I should see "0 hexes"
     When the GM taps the "beats" row in Session Prep
     Then I should see "The granary raid"
+
+  Scenario: A GM who has never exported and has logged sessions sees a backup reminder, which clears after exporting
+    Given the GM logs a session titled "Into the tunnels"
+    And I navigate to the "Overview" screen
+    Then I should see "You've never exported this campaign"
+    When the GM taps "Export now"
+    Then I should see "Backed up — you're covered."

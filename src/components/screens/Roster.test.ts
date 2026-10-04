@@ -37,7 +37,7 @@ function hireling(overrides: Partial<Hireling> = {}): Hireling {
     maxStr: 10,
     dex: 10,
     wil: 10,
-    loyalty: 9,
+    loyal: false,
     wage: 0,
     notes: '',
     status: 'active',
@@ -104,7 +104,7 @@ describe('Roster', () => {
     expect(screen.getByText('Oat')).toBeInTheDocument();
   });
 
-  it('shows a hireling\'s loyalty as a pill and their wage as a tag when set', () => {
+  it('shows a hireling\'s morale (WIL) pill, a Loyal tag, and their wage as a tag when set', () => {
     replaceHirelings([
       {
         id: '1',
@@ -116,7 +116,7 @@ describe('Roster', () => {
         maxStr: 10,
         dex: 10,
         wil: 10,
-        loyalty: 9,
+        loyal: true,
         wage: 5,
         notes: '',
         status: 'active',
@@ -127,8 +127,8 @@ describe('Roster', () => {
     ]);
     render(Roster, { props: { onnavigate: vi.fn() } });
 
-    expect(screen.getByText('Loyalty')).toBeInTheDocument();
-    expect(screen.getByText('9')).toBeInTheDocument();
+    expect(screen.getByText('Morale')).toBeInTheDocument();
+    expect(screen.getByText('Loyal')).toBeInTheDocument();
     expect(screen.getByText('5p/day')).toBeInTheDocument();
   });
 
@@ -144,7 +144,7 @@ describe('Roster', () => {
         maxStr: 10,
         dex: 10,
         wil: 10,
-        loyalty: 9,
+        loyal: false,
         wage: 0,
         notes: '',
         status: 'active',
@@ -245,81 +245,34 @@ describe('Roster', () => {
     expect(screen.getByRole('button', { name: 'Delete' })).toBeInTheDocument();
   });
 
-  const limitWarning = 'This party has more hirelings than its mice can command';
+  describe('quick-find focus hand-off', () => {
+    it('opens the matching party member edit modal and consumes the focus request', () => {
+      replaceParty([member({ id: 'wren', name: 'Wren' })]);
+      const onconsumedfocus = vi.fn();
+      render(Roster, { props: { onnavigate: vi.fn(), focusId: 'wren', onconsumedfocus } });
 
-  it('shows the WIL-limit warning when active hirelings outnumber the party\'s summed WIL', () => {
-    replaceParty([member({ id: '1', name: 'Pip', wil: 4 })]);
-    replaceHirelings([
-      hireling({ id: '1', name: 'Oat' }),
-      hireling({ id: '2', name: 'Reed' }),
-      hireling({ id: '3', name: 'Fen' }),
-      hireling({ id: '4', name: 'Sable' }),
-      hireling({ id: '5', name: 'Basil' }),
-    ]);
-    render(Roster, { props: { onnavigate: vi.fn() } });
+      expect(screen.getByRole('dialog')).toBeInTheDocument();
+      expect(within(screen.getByRole('dialog')).getByDisplayValue('Wren')).toBeInTheDocument();
+      expect(onconsumedfocus).toHaveBeenCalledOnce();
+    });
 
-    expect(screen.getByText(new RegExp(limitWarning))).toBeInTheDocument();
-  });
+    it('opens the matching hireling edit modal and consumes the focus request', () => {
+      replaceHirelings([hireling({ id: 'oat', name: 'Oat' })]);
+      const onconsumedfocus = vi.fn();
+      render(Roster, { props: { onnavigate: vi.fn(), focusId: 'oat', onconsumedfocus } });
 
-  it('does not show the WIL-limit warning when hirelings are within the party\'s summed WIL', () => {
-    replaceParty([member({ id: '1', name: 'Pip', wil: 10 })]);
-    replaceHirelings([hireling({ id: '1', name: 'Oat' }), hireling({ id: '2', name: 'Reed' })]);
-    render(Roster, { props: { onnavigate: vi.fn() } });
+      expect(screen.getByRole('dialog')).toBeInTheDocument();
+      expect(within(screen.getByRole('dialog')).getByDisplayValue('Oat')).toBeInTheDocument();
+      expect(onconsumedfocus).toHaveBeenCalledOnce();
+    });
 
-    expect(screen.queryByText(new RegExp(limitWarning))).not.toBeInTheDocument();
-  });
+    it('is a quiet no-op when focusId matches neither a party member nor a hireling', () => {
+      replaceParty([member({ id: 'wren', name: 'Wren' })]);
+      const onconsumedfocus = vi.fn();
+      render(Roster, { props: { onnavigate: vi.fn(), focusId: 'missing', onconsumedfocus } });
 
-  it('does not show the WIL-limit warning right at the boundary (hirelings equal to summed WIL)', () => {
-    replaceParty([member({ id: '1', name: 'Pip', wil: 5 })]);
-    replaceHirelings([
-      hireling({ id: '1', name: 'Oat' }),
-      hireling({ id: '2', name: 'Reed' }),
-      hireling({ id: '3', name: 'Fen' }),
-      hireling({ id: '4', name: 'Sable' }),
-      hireling({ id: '5', name: 'Basil' }),
-    ]);
-    // 5 hirelings === 5 WIL is exactly at capacity, not over it.
-    render(Roster, { props: { onnavigate: vi.fn() } });
-
-    expect(screen.queryByText(new RegExp(limitWarning))).not.toBeInTheDocument();
-  });
-
-  it('reappears when a hireling is added past the WIL limit and disappears again once removed', async () => {
-    replaceParty([member({ id: '1', name: 'Pip', wil: 1 })]);
-    replaceHirelings([hireling({ id: '1', name: 'Oat' })]);
-    render(Roster, { props: { onnavigate: vi.fn() } });
-
-    expect(screen.queryByText(new RegExp(limitWarning))).not.toBeInTheDocument();
-
-    await fireEvent.click(screen.getByRole('button', { name: 'Add hireling' }));
-    await fireEvent.input(screen.getByLabelText('Name'), { target: { value: 'Reed' } });
-    await fireEvent.click(screen.getByRole('button', { name: 'Save' }));
-
-    // Saving now awaits the store's IndexedDB flush before closing the
-    // modal (see Roster.svelte's saveHireling) — wait for that close before
-    // interacting with a *different* dialog (the delete confirmation
-    // below), so there's never more than one `role="dialog"` on screen.
-    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
-    expect(screen.getByText(new RegExp(limitWarning))).toBeInTheDocument();
-
-    await fireEvent.click(screen.getAllByRole('button', { name: 'Delete' })[1]!);
-    const dialog = screen.getByRole('dialog');
-    await fireEvent.click(within(dialog).getByRole('button', { name: 'Delete' }));
-
-    expect(screen.queryByText(new RegExp(limitWarning))).not.toBeInTheDocument();
-  });
-
-  it('ignores deceased hirelings and deceased mice when computing the WIL limit', () => {
-    replaceParty([
-      member({ id: '1', name: 'Pip', wil: 10 }),
-      member({ id: '2', name: 'Wren', wil: 10, status: 'deceased' }),
-    ]);
-    replaceHirelings([
-      hireling({ id: '1', name: 'Oat', status: 'deceased' }),
-      hireling({ id: '2', name: 'Reed', status: 'deceased' }),
-    ]);
-    render(Roster, { props: { onnavigate: vi.fn() } });
-
-    expect(screen.queryByText(new RegExp(limitWarning))).not.toBeInTheDocument();
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+      expect(onconsumedfocus).toHaveBeenCalledOnce();
+    });
   });
 });

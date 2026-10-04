@@ -12,12 +12,31 @@
   import LiveSession from './components/screens/LiveSession.svelte';
   import type { NavScreen } from './components/layout/AppSidebar.svelte';
   import type { Session } from './lib/stores/sessions.svelte';
+  import type { SearchResult } from './components/ui/QuickFind.svelte';
 
   let pendingRecapDraft = $state<Omit<Session, 'id'> | null>(null);
 
   function draftRecap(draft: Omit<Session, 'id'>) {
     pendingRecapDraft = draft;
     screen = 'sessions';
+  }
+
+  // Quick-find's "navigate and open the entity's existing edit surface" —
+  // mirrors `pendingRecapDraft`/`draftRecap` above exactly: set once here,
+  // handed down as a prop, and cleared via `onconsumedfocus` once the target
+  // screen has used it. If the entity no longer exists by the time a screen
+  // reads it, `focusId` simply matches nothing and no modal opens — a quiet
+  // no-op, the same "dangling id degrades gracefully" rule the rest of the
+  // app already follows.
+  let pendingFocus = $state<{ screen: NavScreen; entityId: string } | null>(null);
+
+  function selectSearchResult(result: SearchResult) {
+    pendingFocus = { screen: result.navScreen, entityId: result.id };
+    navigate(result.navScreen);
+  }
+
+  function consumeFocus() {
+    pendingFocus = null;
   }
 
   let screen = $state<
@@ -49,30 +68,63 @@
 </script>
 
 {#if screen === 'live'}
-  <LiveSession onexit={() => (screen = 'dashboard')} ondraftrecap={draftRecap} />
+  <LiveSession onexit={() => (screen = 'dashboard')} ondraftrecap={draftRecap} onnavigate={navigate} />
 {:else if screen === 'roster'}
-  <Roster onnavigate={navigate} onstartsession={() => (screen = 'live')} />
+  <Roster
+    onnavigate={navigate}
+    onstartsession={() => (screen = 'live')}
+    onselectresult={selectSearchResult}
+    focusId={pendingFocus?.screen === 'warband' ? pendingFocus.entityId : undefined}
+    onconsumedfocus={consumeFocus}
+  />
 {:else if screen === 'adventure'}
-  <Adventure onnavigate={navigate} onstartsession={() => (screen = 'live')} />
+  <Adventure
+    onnavigate={navigate}
+    onstartsession={() => (screen = 'live')}
+    onselectresult={selectSearchResult}
+    focusId={pendingFocus?.screen === 'adventure' ? pendingFocus.entityId : undefined}
+    onconsumedfocus={consumeFocus}
+  />
 {:else if screen === 'bestiary'}
-  <Bestiary onnavigate={navigate} onstartsession={() => (screen = 'live')} />
+  <Bestiary
+    onnavigate={navigate}
+    onstartsession={() => (screen = 'live')}
+    onselectresult={selectSearchResult}
+    focusId={pendingFocus?.screen === 'bestiary' ? pendingFocus.entityId : undefined}
+    onconsumedfocus={consumeFocus}
+  />
 {:else if screen === 'factions'}
-  <Factions onnavigate={navigate} onstartsession={() => (screen = 'live')} />
+  <Factions
+    onnavigate={navigate}
+    onstartsession={() => (screen = 'live')}
+    onselectresult={selectSearchResult}
+    focusId={pendingFocus?.screen === 'factions' ? pendingFocus.entityId : undefined}
+    onconsumedfocus={consumeFocus}
+  />
 {:else if screen === 'hexMap'}
-  <HexMap onnavigate={navigate} onstartsession={() => (screen = 'live')} />
+  <HexMap
+    onnavigate={navigate}
+    onstartsession={() => (screen = 'live')}
+    onselectresult={selectSearchResult}
+    focusId={pendingFocus?.screen === 'hexMap' ? pendingFocus.entityId : undefined}
+    onconsumedfocus={consumeFocus}
+  />
 {:else if screen === 'generators'}
-  <Generators onnavigate={navigate} onstartsession={() => (screen = 'live')} />
+  <Generators onnavigate={navigate} onstartsession={() => (screen = 'live')} onselectresult={selectSearchResult} />
 {:else if screen === 'sessions'}
   <Sessions
     onnavigate={navigate}
     onstartsession={() => (screen = 'live')}
     draftRecap={pendingRecapDraft}
     onconsumeddraft={() => (pendingRecapDraft = null)}
+    onselectresult={selectSearchResult}
+    focusId={pendingFocus?.screen === 'sessions' ? pendingFocus.entityId : undefined}
+    onconsumedfocus={consumeFocus}
   />
 {:else if screen === 'timeline'}
-  <Timeline onnavigate={navigate} onstartsession={() => (screen = 'live')} />
+  <Timeline onnavigate={navigate} onstartsession={() => (screen = 'live')} onselectresult={selectSearchResult} />
 {:else if screen === 'settings'}
-  <Settings onnavigate={navigate} onstartsession={() => (screen = 'live')} />
+  <Settings onnavigate={navigate} onstartsession={() => (screen = 'live')} onselectresult={selectSearchResult} />
 {:else}
-  <Dashboard onnavigate={navigate} onstartsession={() => (screen = 'live')} />
+  <Dashboard onnavigate={navigate} onstartsession={() => (screen = 'live')} onselectresult={selectSearchResult} />
 {/if}

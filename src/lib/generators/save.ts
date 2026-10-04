@@ -8,9 +8,8 @@ import { rollDice } from './roll';
  * exactly the score is a pass (roll-under is inclusive of the score).
  *
  * Deliberately generic on `score` rather than "STR save" specifically, so it
- * lives here rather than embedded in a component. Note this is NOT the same
- * primitive as `rollLoyaltySave` below — loyalty saves are 2d6 roll-under,
- * not d20 roll-under.
+ * lives here rather than embedded in a component. Hireling morale saves are
+ * WIL saves too, but may roll with Advantage — see `rollMoraleSave` below.
  */
 export interface SaveResult {
   roll: number;
@@ -25,21 +24,21 @@ export function rollSave(score: number): SaveResult {
 }
 
 /**
- * Mausritter's loyalty save: roll 2d6 and succeed if the total is at or
- * under the hireling's Loyalty score (2–12, generated on 2d6). A different
- * mechanic from `rollSave` — this is a 2d6 roll-under band, not a d20 one —
- * so it's a separate primitive rather than a `rollSave` call site. Carries
- * both dice faces (rather than just the total) so `DiceRoll` can render two
- * d6 faces the way a GM would actually see them land on the table.
+ * Mausritter's hireling morale save (SRD "Hireling morale"): a plain d20 WIL
+ * save — succeed at or under the hireling's WIL, or they flee. Especially
+ * well-paid or loyal hirelings roll with Advantage: 2d20, keep the lowest.
+ * Carries every die rolled so `DiceRoll` can show both faces on Advantage.
  */
-export interface LoyaltySaveResult {
-  dice: [number, number];
+export interface MoraleSaveResult {
+  dice: number[];
   roll: number;
   score: number;
+  advantage: boolean;
   passed: boolean;
 }
 
-export function rollLoyaltySave(score: number): LoyaltySaveResult {
-  const { dice, total } = rollDice(2, 6);
-  return { dice: [dice[0]!, dice[1]!], roll: total, score, passed: total <= score };
+export function rollMoraleSave(wil: number, advantage: boolean): MoraleSaveResult {
+  const { dice } = rollDice(advantage ? 2 : 1, 20);
+  const roll = Math.min(...dice);
+  return { dice, roll, score: wil, advantage, passed: roll <= wil };
 }

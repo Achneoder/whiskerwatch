@@ -69,6 +69,16 @@
         "trailing": "kurz vor dem Auslösen"
       },
       "allClear": "Nichts Dringendes — ihr seid startklar."
+    },
+    "backupCard": {
+      "eyebrow": "Datensicherheit",
+      "title": "Kampagne sichern",
+      "exportNow": "Jetzt exportieren",
+      "neverBackedUp": "Du hast diese Kampagne noch nie exportiert",
+      "neverBackedUpTrailing": "{count} Sitzungen protokolliert — bei einem Browser-Reset wäre alles verloren.",
+      "staleBackup": "{count} Sitzungen seit deinem letzten Export",
+      "staleBackupTrailing": "Zuletzt vor {days} Tagen exportiert — ein kurzer Export hält diese Kampagne sicher.",
+      "allClear": "Gesichert — alles ist geschützt."
     }
   },
   "liveSession": {
@@ -97,7 +107,7 @@
     "strSaveFailed": "STK-Rettungswurf: {roll} von {score} — Fehlgeschlagen (Verletzt, Kampfunfähig)",
     "confirmDeathAction": "Tod bestätigen",
     "deathTitle": "Tod bestätigen?",
-    "deathMessage": "{name} wurde auf 0 STK reduziert — eine tödliche Wunde. Dies entfernt die Maus dauerhaft aus dem aktiven Spiel und kann nicht rückgängig gemacht werden.",
+    "deathMessage": "{name} wurde auf 0 STK reduziert und ist tot. Dies entfernt die Maus dauerhaft aus dem aktiven Spiel und kann nicht rückgängig gemacht werden.",
     "causeOfDeath": "Todesursache (optional)",
     "causeOfDeathPlaceholder": "Von den Krallen der Hofkatze überrannt…",
     "cancel": "Abbrechen",
@@ -117,14 +127,10 @@
     "chargeEmpty": "{name} ist leer.",
     "chargeUsedUp": "{name} ist aufgebraucht.",
     "chargeCellAria": "{name}, {current} von {max} Ladungen, antippen um eine zu verbrauchen",
-    "loyaltySaveAria": "Loyalitäts-Rettungswurf für {name} würfeln, Loyalität {loyalty}",
-    "loyaltySavePassed": "Loyalitäts-Rettungswurf: {roll} von {score} — Bestanden",
-    "loyaltySaveFailed": "Loyalitäts-Rettungswurf: {roll} von {score} — Fehlgeschlagen",
     "payDay": "Zahltag",
     "payDayTitle": "Zahltag",
     "payDayPaid": "Bezahlt",
     "payDayUnpaid": "Unbezahlt",
-    "rollLoyaltySave": "Loyalitäts-Rettungswurf würfeln",
     "encounter": {
       "eyebrow": "Begegnung",
       "roll": "Begegnung würfeln",
@@ -143,7 +149,44 @@
       "listAriaLabel": "Aktive Abenteuer"
     },
     "itemMoved": "{item} an {to} übergeben",
-    "hirelingTag": "Söldner"
+    "hirelingTag": "Söldner",
+    "watch": {
+      "eyebrow": "Wache",
+      "dayWatch": "Tag {day} · Wache {watch} ({label})",
+      "labels": {
+        "morning": "Morgen",
+        "midday": "Mittag",
+        "evening": "Abend",
+        "night": "Nacht"
+      },
+      "checkTag": "Begegnungsprobe",
+      "restedToday": "Heute gerastet",
+      "onboardingPrompt": "Wo beginnt die Gruppe?",
+      "startAt": "Bei {name} starten",
+      "openHexMap": "Hexkarte öffnen",
+      "standingIn": "Aktueller Ort: {name} ({terrain})",
+      "prompt": "Diese Wache verbringt die Gruppe:",
+      "stay": "Rasten",
+      "forage": "Nahrung suchen",
+      "notMapped": "{label}: Noch nicht kartiert",
+      "noWaterPath": "{label}: Kein Weg über das Wasser",
+      "moveCostAria": "{label}·{terrain}, kostet 2 Wachen",
+      "checkHit": "Begegnung!",
+      "checkClear": "Keine Begegnung",
+      "twoWatchNote": "Zwei Wachen vergehen — eine Begegnungsprobe wurde bereits gewürfelt.",
+      "rationsRolled": "{count} Rationen gewürfelt",
+      "addTo": "Hinzufügen zu:",
+      "rationsAdded": "{count} Rationen zu {name}s Beutel hinzugefügt",
+      "exhaustedBanner": "Gestern nicht gerastet — Erschöpfung auf die Gruppe anwenden?",
+      "applyExhausted": "Anwenden",
+      "dismissExhausted": "Verwerfen"
+    },
+    "morale": "Moral",
+    "moraleSaveAria": "Moral-Rettungswurf für {name} würfeln, WIL {wil}",
+    "moraleSaveAriaAdv": "Moral-Rettungswurf für {name} würfeln, WIL {wil}, mit Vorteil",
+    "moraleSavePassed": "Moral-Rettungswurf: {roll} gegen WIL {score} — Bleibt",
+    "moraleSaveFailed": "Moral-Rettungswurf: {roll} gegen WIL {score} — Flieht",
+    "rollMoraleSave": "Moral-Rettungswurf würfeln"
   },
   "recap": {
     "eyebrow": "Live · Sitzungsende",
@@ -182,8 +225,7 @@
       "addTitle": "Helfer hinzufügen",
       "editTitle": "Helfer bearbeiten",
       "deleteTitle": "Helfer löschen?",
-      "deleteMessage": "Dadurch wird {name} aus der Übersicht entfernt. Das kann nicht rückgängig gemacht werden — aber sonst ändert sich nichts an der Kampagne.",
-      "hirelingLimitWarning": "Diese Gruppe hat mehr Gefolge, als ihre Mäuse befehligen können (WIL-Grenze) — spielbar ist es trotzdem, aber Loyalitätsproben könnten schwierig werden."
+      "deleteMessage": "Dadurch wird {name} aus der Übersicht entfernt. Das kann nicht rückgängig gemacht werden — aber sonst ändert sich nichts an der Kampagne."
     },
     "form": {
       "name": "Name",
@@ -192,16 +234,17 @@
       "hp": "TP",
       "maxHp": "Max. TP",
       "pips": "Pips",
-      "loyalty": "Loyalität",
       "notes": "Notizen",
       "notesPlaceholder": "Lohn, mitgeführte Ausrüstung, Eigenheiten…",
       "conditions": "Zustände",
       "addCondition": "Hinzufügen",
       "cancel": "Abbrechen",
-      "save": "Speichern"
+      "save": "Speichern",
+      "wil": "WIL",
+      "loyal": "Treu oder gut bezahlt"
     },
     "scars": {
-      "eyebrow": "Tödliche Wunden",
+      "eyebrow": "Narben",
       "add": "Narbe",
       "addTitle": "Narbe hinzufügen",
       "submit": "Narbe hinzufügen",
@@ -215,26 +258,24 @@
       "allTitle": "Narben von {name}"
     },
     "fallen": "Gefallen ({count})",
-    "deceased": "Verstorben"
+    "deceased": "Verstorben",
+    "loyalTag": "Treu"
   },
   "inventory": {
     "heading": "Inventar",
     "slotsUsed": "{used} / {max} Plätze belegt",
     "paws": "Pfoten",
-    "body": "Rücken",
+    "body": "Körper",
     "addItem": "Gegenstand hinzufügen",
     "emptySlotAria": "Leerer Platz, Gegenstand hinzufügen",
     "filledSlotAria": "{name}, {slots} {slotWord}, Gegenstand bearbeiten",
     "slotSingular": "Platz",
     "slotPlural": "Plätze",
     "chargesAria": "{current} von {max} Ladungen übrig",
-    "overburdenedTitle": "Überladen.",
-    "overburdenedMessage": "Eine Maus kann nicht mehr als 10 Plätze tragen — leg vor der nächsten Szene etwas ab.",
     "move": "Übergeben",
     "moveAria": "{name} übergeben",
     "moveTo": "{item} übergeben an:",
     "back": "Zurück",
-    "willOverburden": "wird überladen sein",
     "noRecipients": "Niemand sonst, an den du das übergeben könntest.",
     "form": {
       "name": "Name",
@@ -244,7 +285,11 @@
       "notesPlaceholder": "d6 Schaden, Rüstung 2, Andenken…",
       "editingSlot": "Platz bearbeiten"
     },
-    "removeItem": "Gegenstand entfernen"
+    "removeItem": "Gegenstand entfernen",
+    "pack": "Rucksack",
+    "encumberedTitle": "Überladen.",
+    "encumberedMessage": "Mehr Gegenstände als Plätze — kein Rennen, und jeder Rettungswurf mit Nachteil, bis etwas abgelegt wird.",
+    "willEncumber": "wird überladen sein"
   },
   "adventure": {
     "eyebrow": "Vorbereitung · Abenteuer",
@@ -391,6 +436,11 @@
     "deleteMessage": "Dadurch wird {name} von der Karte entfernt. Das kann nicht rückgängig gemacht werden — aber sonst ändert sich nichts an der Kampagne.",
     "legend": "Legende",
     "clear": "Feld löschen",
+    "partyIsHere": "Die Gruppe ist hier",
+    "partyIsHereAria": "Die Gruppe ist hier.",
+    "hereNow": "Jetzt hier",
+    "setHere": "Hier festlegen",
+    "clearHere": "Entfernen",
     "beatsTouching": "Beats, die dieses Feld betreffen",
     "encountersHere": "Begegnungen hier",
     "controlledBy": "Kontrolliert von",
@@ -492,19 +542,19 @@
     },
     "data": {
       "title": "Kampagnendaten",
-      "intro": "Exportiere alles – Gruppen, Söldner, Abenteuer, Bestiarium, Fraktionen, Hexkarte und Sitzungsprotokolle – in eine Datei, die du sichern oder auf ein anderes Gerät übertragen kannst.",
-      "exportHeading": "Exportieren",
-      "exportHint": "Lade eine einzelne JSON-Datei mit deiner gesamten Kampagne herunter.",
+      "intro": "Exportiere alles – Gruppen, Söldner, Abenteuer, Bestiarium, Fraktionen, Hexkarte, Sitzungsprotokolle und die Chronik – in eine Datei, die du sichern oder auf ein anderes Gerät übertragen kannst.",
+      "exportHeading": "Exportieren & teilen",
+      "exportHint": "Schicke deine gesamte Kampagne über das Teilen-Menü direkt an dein anderes Gerät (AirDrop, Nearby Share, Messenger, Cloud-Ordner) – oder speichere sie als Datei, wo Teilen nicht verfügbar ist.",
       "export": "Kampagne exportieren",
       "exportDone": "In deinen Downloads gespeichert.",
       "importHeading": "Importieren",
-      "importHint": "Aus einer zuvor exportierten Datei wiederherstellen. Dies ersetzt alles, was aktuell in der App ist.",
+      "importHint": "Aus einer exportierten Datei wiederherstellen – z. B. einer, die du von deinem anderen Gerät geschickt hast. Dies ersetzt alles, was aktuell in der App ist.",
       "import": "Kampagne importieren",
       "importDone": "Kampagne wiederhergestellt.",
       "resetHeading": "Zurücksetzen",
       "resetHint": "Alle Kampagnendaten löschen und neu anfangen. Dies kann nicht rückgängig gemacht werden – exportiere alles, bevor du fortfährst.",
       "reset": "Alles zurücksetzen",
-      "footer": "Tipp: Exportiere nach jeder Sitzung, damit nichts verloren geht, falls der Speicher dieses Browsers geleert wird.",
+      "footer": "Tipp: Du wechselst zwischen Handy und Tablet? Exportiere auf dem Gerät, auf dem du zuletzt gespielt hast, und importiere vor der nächsten Sitzung auf dem anderen.",
       "confirmTitle": "Kampagnendaten ersetzen?",
       "confirmMessage": "Beim Importieren wird alles überschrieben, was aktuell in diesem Browser gespeichert ist. Das kann nur rückgängig gemacht werden, wenn du einen weiteren Export hast.",
       "confirmAction": "Importieren und ersetzen",
@@ -512,7 +562,20 @@
       "resetConfirmTitle": "Alle Kampagnendaten zurücksetzen?",
       "resetConfirmMessage": "Dies löscht dauerhaft alle deine Kampagnendaten (Gruppen, Abenteuer, Fraktionen usw.) und kann nicht rückgängig gemacht werden. Stelle sicher, dass du alles, was du behalten möchtest, vorher exportiert hast.",
       "resetConfirmAction": "Zurücksetzen und neu anfangen",
-      "resetDone": "Kampagne zurückgesetzt. Neuer Anfang!"
+      "resetDone": "Kampagne zurückgesetzt. Neuer Anfang!",
+      "exportShared": "Kampagne geteilt. Importiere sie auf deinem anderen Gerät unter Einstellungen.",
+      "preview": {
+        "label": "Inhalt dieser Datei",
+        "campaign": "Kampagne",
+        "exportedAt": "Exportiert",
+        "sessions": "Sitzungen",
+        "latestSession": "zuletzt: #{number}",
+        "party": "Gruppenmäuse",
+        "adventures": "Abenteuer",
+        "timeline": "Chronik-Einträge",
+        "timelineKept": "nicht enthalten (die Chronik dieses Geräts bleibt erhalten)",
+        "olderWarning": "Achtung: Diese Datei reicht nur bis Sitzung #{file}, auf diesem Gerät gibt es aber schon Sitzung #{local}. Der Import würde deine Kampagne zurückwerfen."
+      }
     }
   },
   "timeline": {
@@ -537,16 +600,16 @@
     "band": {
       "hostile": "Feindselig",
       "unfriendly": "Unfreundlich",
-      "neutral": "Neutral",
-      "friendly": "Freundlich",
+      "unsure": "Unsicher",
+      "talkative": "Gesprächig",
       "helpful": "Hilfsbereit"
     },
     "guidance": {
-      "hostile": "Greift die Gruppe an oder handelt gegen sie.",
-      "unfriendly": "Tut das Gegenteil dessen, worum gebeten wurde, greift eventuell an.",
-      "neutral": "Unsicher, wird zur Selbsterhaltung handeln.",
-      "friendly": "Tut, worum gebeten wird, solange es sich nicht in Gefahr bringt.",
-      "helpful": "Hilft aktiv und bietet einen Dienst an."
+      "hostile": "Wie haben die Mäuse sie verärgert?",
+      "unfriendly": "Wie lassen sie sich besänftigen?",
+      "unsure": "Was könnte sie für die Mäuse gewinnen?",
+      "talkative": "Was könnten sie tauschen?",
+      "helpful": "Wie können sie den Mäusen helfen?"
     }
   },
   "rulesDrawer": {
@@ -559,7 +622,7 @@
       "inventory": "Inventar",
       "reaction": "Reaktion",
       "advancement": "Aufstieg",
-      "retainers": "Gefolge"
+      "hirelings": "Söldner"
     },
     "saves": {
       "heading": "Rettungswürfe",
@@ -569,7 +632,7 @@
     "damage": {
       "heading": "Schaden & die Todesspirale",
       "body": "Schaden trifft zuerst die TP. Sind die TP aufgebraucht, fließt der restliche Schaden in STR über. Jeder STR-Verlust erfordert sofort einen STR-Rettungswurf. Ein misslungener STR-Rettungswurf verursacht Verletzt und Kampfunfähig. Sinkt STR auf genau 0, stirbt die Maus sofort — kein Rettungswurf, kein Wunden-Wurf.",
-      "note": "SRD-Hinweis: Diese App verzichtet auf die 2w6-Tabelle „Tödliche Wunden“ des SRD — 0 STR bedeutet einen klaren Tod, keinen Wurf für die Art der Wunde."
+      "note": "SRD-Hinweis: Es gibt keine Wundentabelle — 0 STK bedeutet den Tod. Eine kampfunfähige Kreatur, die 6 Spielzüge unversorgt bleibt, stirbt ebenfalls."
     },
     "conditions": {
       "heading": "Zustände",
@@ -597,13 +660,14 @@
         },
         "unconscious": {
           "label": "Bewusstlos",
-          "note": "Durch eine Tödliche Wunde außer Gefecht. Wird durch Versorgung oder Rast gemäß den Regeln zu Tödlichen Wunden beseitigt."
+          "note": "Bewusstlos und handlungsunfähig. Endet durch Versorgen oder Rast."
         }
       }
     },
     "inventory": {
       "heading": "Inventar & Slots",
-      "body": "Jede Maus und jedes Gefolgsmitglied hat fest 10 Slots: 6 Körper + 4 Pfoten (Pfoten füllen sich zuerst, für schnellen Zugriff). Die meisten Gegenstände belegen 1 Slot; sperrige Ausrüstung (schwere Rüstung, zweihändige Waffen, große Schätze) belegt 2. Manche Dinge (getragene Kleidung, natürliche Krallen und Zähne) belegen 0. Aufladbare Gegenstände (Laternen, Zauber, Seil) verfolgen ihre Ladungen auf einer Verschleiß-Leiste — pro Nutzung einen Punkt abhaken. Mehr als 10 Slots zeigt nur eine Warnung, blockiert aber nichts."
+      "body": "Eine Maus hat 10 Plätze: 2 Pfotenplätze (in der Pfote getragen), 2 Körperplätze (am Körper; als freie Aktion mit den Pfoten tauschbar) und 6 Rucksackplätze (im Kampf kostet das Herausholen deine Aktion). Söldner haben 6: 2 Pfoten, 2 Körper, 2 Rucksack. Die meisten Gegenstände belegen 1 Platz; Rüstung und zweihändige Waffen 2. Auch Zustände belegen Plätze (die App legt sie nicht ins Raster — zähl sie selbst mit). Wer mehr trägt, als Plätze vorhanden sind, ist überladen: kein Rennen, alle Rettungswürfe mit Nachteil.",
+      "usage": "Abnutzung: Die meisten Gegenstände haben 3 Abnutzungspunkte; sind alle markiert, ist der Gegenstand verbraucht oder zerstört. Waffen, Rüstung und Munition: nach einem Kampf für jeden benutzten Gegenstand W6 würfeln — bei 4–6 markieren. Fackeln und Laternen: alle 6 Spielzüge. Rationen: nach einer Mahlzeit."
     },
     "reaction": {
       "heading": "Reaktionswurf",
@@ -611,20 +675,73 @@
       "range": {
         "hostile": "2",
         "unfriendly": "3–5",
-        "neutral": "6–8",
-        "friendly": "9–11",
+        "unsure": "6–8",
+        "talkative": "9–11",
         "helpful": "12"
       }
     },
     "advancement": {
       "heading": "Aufstieg",
-      "body": "Erfahrungspunkte (EP) kommen aus in der Ruhephase ausgegebenen Pfennigen (Feiern, Ausrüstung, Andenken) — niemals aus Kills oder Kämpfen.",
-      "rate": "1 EP pro 10 ausgegebene Pfennige.",
+      "body": "EP gibt es dafür, Schätze und Nützliches aus gefährlichen Orten in die Sicherheit einer Siedlung zu bringen: 1 EP pro Pfennig Wert, gleichmäßig auf die Gruppe verteilt. Niemals für Kills oder Kämpfe.",
+      "rate": "Bonus-EP: 1 EP pro 10 Pfennige, die selbstlos für Verbesserungen der ganzen Gemeinschaft ausgegeben werden.",
       "thresholds": "Stufen-Schwellen: 1.000 / 3.000 / 6.000 / 11.000 / 16.000 EP, danach +5.000 EP pro weiterer Stufe."
     },
-    "retainers": {
-      "heading": "Gefolge-Obergrenze",
-      "body": "Eine Maus kann so viele Gefolgsmitglieder befehligen, wie ihr WIL-Wert beträgt. Das gilt pro Maus und wird über die ganze Gruppe summiert, um die Gesamtkapazität der Gruppe zu ergeben."
+    "hirelings": {
+      "heading": "Söldner",
+      "morale": "Moral: Gerät ein Söldner in eine belastende Lage, bleibt er ohne Lohn oder Essen oder soll er etwas Gefährlicheres tun als vereinbart, legt er einen WIL-Rettungswurf ab oder flieht. Besonders gut bezahlte oder treue Söldner würfeln mit Vorteil.",
+      "body": "Söldner erhalten täglich Lohn und haben 6 Inventarplätze (2 Pfoten, 2 Körper, 2 Rucksack). Ein Söldner, der einen Anteil am Schatz bekommt, erhält 1 EP pro Pfennig über seinem Tageslohn."
     }
+  },
+  "search": {
+    "trigger": "Kampagne durchsuchen",
+    "placeholder": "Mäuse, Beats, Hexfelder durchsuchen…",
+    "back": "Zurück",
+    "jumpTo": "Springen zu:",
+    "noResults": "Keine Treffer",
+    "noResultsHint": "Nichts gefunden für „{query}“. Prüfe die Schreibweise oder versuche ein kürzeres Wort.",
+    "moreResults": "+{n} weitere — weiter tippen, um einzugrenzen",
+    "types": {
+      "party": "Maus",
+      "hireling": "Söldner",
+      "beat": "Beat",
+      "bestiary": "Kreatur",
+      "faction": "Fraktion",
+      "hex": "Hexfeld",
+      "session": "Sitzung"
+    },
+    "categories": {
+      "party": "Gruppe",
+      "hireling": "Söldner",
+      "beat": "Beats",
+      "bestiary": "Bestiarium",
+      "faction": "Fraktionen",
+      "hex": "Hexfelder",
+      "session": "Sitzungen"
+    },
+    "status": {
+      "active": "Aktiv",
+      "deceased": "Verstorben"
+    },
+    "sessionSecondary": "#{number} · vor {days} Tagen"
+  },
+  "help": {
+    "ariaLabel": "Hilfe: {label}",
+    "hp": "Trefferschutz — Ausweichen und Wegstecken, nicht Fleisch und Blut. Schaden geht zuerst von den TP ab; sind sie aufgebraucht, sinkt STK und ein STK-Rettungswurf ist fällig. Eine kurze Rast stellt W6+1 TP wieder her, eine lange Rast (eine Wache) alle.",
+    "pips": "Die Währung in Mausritter, für Ausrüstung, Lohn, Unterkunft und die Ruhephase.",
+    "wage": "Pfennige, die dieser Söldner pro Tag als Lohn erhält.",
+    "loyalty": "Besonders treue oder gut bezahlte Söldner würfeln Moral-Rettungswürfe mit Vorteil. Ein Moral-Rettungswurf ist ein WIL-Rettungswurf — fällig, wenn ein Söldner unter Druck gerät, ohne Lohn oder Essen bleibt oder etwas Gefährlicheres tun soll als vereinbart. Misslingt er, flieht der Söldner.",
+    "armor": "Wird von jedem Treffer abgezogen, den diese Kreatur erleidet. Die meisten Kreaturen haben 0–2.",
+    "inventory": "Jede Maus hat 10 Plätze: 2 Pfoten, 2 Körper, 6 Rucksack (Söldner 2/2/2). Pfoten und Körper sind griffbereit; im Kampf kostet das Herauskramen aus dem Rucksack deine Aktion. Wer mehr trägt, als Plätze vorhanden sind, ist überladen: kein Rennen und Nachteil auf jeden Rettungswurf.",
+    "slots": "Wie viele Inventarplätze dieser Gegenstand belegt. Rüstung und zweihändige Waffen brauchen 2.",
+    "charges": "Abnutzungspunkte (die meisten Gegenstände haben 3). Waffen, Rüstung und Munition: nach einem Kampf für jeden benutzten Gegenstand W6 würfeln, bei 4–6 markieren. Fackeln: alle 6 Spielzüge. Rationen: nach einer Mahlzeit. Sind alle markiert, ist der Gegenstand verbraucht oder kaputt; 0 heißt: nutzt sich nicht ab.",
+    "disposition": "Wie diese Fraktion der Gruppe derzeit gegenübersteht. Prägt, wie ihre Mitglieder im Spiel reagieren.",
+    "clock": "Fortschritt auf das aktuelle Ziel der Fraktion. Rücke sie vor, wenn die Fraktion zwischen den Sitzungen handelt; sind alle Segmente gefüllt, tritt das Ziel ein.",
+    "terrain": "Bestimmt das Reisetempo: Ein Hex zu Fuß zu durchqueren dauert 1 Wache, durch Wald oder Hügel 2. Wasser ist zu Fuß nicht passierbar.",
+    "encounters": "Kreaturen, die hier auftauchen können. Das Gewicht ist ihr Anteil am Begegnungswurf — Gewicht 3 ist dreimal so wahrscheinlich wie Gewicht 1.",
+    "watch": "Ein Tag hat vier Wachen. Ein Hex reisen, Nahrung suchen oder eine lange Rast dauert je eine. Begegnungsproben gibt es in der Morgen- und Abendwache. Wer an einem Tag keine lange Rast bekommt, ist erschöpft.",
+    "reaction": "Würfle 2W6, wenn die Gruppe auf eine Kreatur trifft, deren Haltung nicht offensichtlich ist: Niedrige Ergebnisse sind feindselig, hohe hilfsbereit. Ein Ausgangspunkt für die Szene, kein Drehbuch.",
+    "backup": "Deine Kampagne existiert nur in diesem Browser. Werden die Websitedaten gelöscht oder geht das Gerät verloren, ist sie weg. Eine exportierte Datei ist dein Backup — und bringt die Kampagne auf ein anderes Gerät.",
+    "reactionLabel": "Reaktionswurf",
+    "wil": "Willenskraft. Söldner würfeln Moral-Rettungswürfe dagegen: W20, bis zu diesem Wert gelingt er. Typische Söldner haben 2W6 WIL."
   }
 }

@@ -153,7 +153,7 @@ describe('LiveSessionInventoryModal', () => {
       expect(pipRow).toHaveTextContent('1/10');
       const hirelingRow = screen.getByRole('button', { name: /Sables/ });
       expect(hirelingRow).toHaveTextContent('Hireling');
-      expect(hirelingRow).toHaveTextContent('0/10');
+      expect(hirelingRow).toHaveTextContent('0/6');
     });
 
     it('executes the move immediately on tapping a recipient row, no confirm step', async () => {
@@ -172,7 +172,7 @@ describe('LiveSessionInventoryModal', () => {
       expect(onmove).toHaveBeenCalledWith('torch-1', 'r1');
     });
 
-    it('shows a non-blocking overburden warning when a recipient would exceed the slot cap, but the row stays tappable', async () => {
+    it('shows a non-blocking encumbered warning when a recipient would exceed the slot cap, but the row stays tappable', async () => {
       const onmove = vi.fn();
       render(LiveSessionInventoryModal, {
         props: baseProps({
@@ -183,7 +183,7 @@ describe('LiveSessionInventoryModal', () => {
               id: 'r1',
               name: 'Sables',
               kind: 'hireling',
-              items: Array.from({ length: 10 }, (_, i) => makeItem({ id: `full-${i}`, slots: 1 })),
+              items: Array.from({ length: 6 }, (_, i) => makeItem({ id: `full-${i}`, slots: 1 })),
             },
           ],
           onmove,
@@ -191,7 +191,7 @@ describe('LiveSessionInventoryModal', () => {
       });
 
       const row = screen.getByRole('button', { name: /Sables/ });
-      expect(row).toHaveTextContent('will be overburdened');
+      expect(row).toHaveTextContent('will be encumbered');
       expect(row).not.toBeDisabled();
 
       await fireEvent.click(row);

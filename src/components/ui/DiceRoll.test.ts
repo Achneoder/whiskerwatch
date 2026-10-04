@@ -29,7 +29,7 @@ describe('DiceRoll', () => {
     expect(screen.getByText('Hostile')).toBeInTheDocument();
   });
 
-  it.each(['hostile', 'unfriendly', 'neutral', 'friendly', 'helpful'] as const)(
+  it.each(['hostile', 'unfriendly', 'unsure', 'talkative', 'helpful'] as const)(
     'renders without a word pill for the %s reaction band skin',
     (outcome) => {
       const { container } = render(DiceRoll, { props: { dice: [3, 3], total: 6, outcome, label: outcome } });

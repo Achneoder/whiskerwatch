@@ -4,7 +4,7 @@
   import Button from '../ui/Button.svelte';
   import DiceRoll from '../ui/DiceRoll.svelte';
   import Icon from '../ui/Icon.svelte';
-  import { rollSave, rollLoyaltySave } from '../../lib/generators/save';
+  import { rollSave, rollMoraleSave } from '../../lib/generators/save';
 
   export interface Saveable {
     id: string;
@@ -12,11 +12,11 @@
     str: number;
     dex: number;
     wil: number;
-    /** Only set for hirelings — party mice have no Loyalty score, so the LOY button doesn't render for them. */
-    loyalty?: number;
+    /** Only set for hirelings (true = loyal/well-paid, Advantage) — mice don't make morale saves, so the Morale button doesn't render for them. */
+    loyal?: boolean;
   }
 
-  type Attribute = 'str' | 'dex' | 'wil' | 'loyalty';
+  type Attribute = 'str' | 'dex' | 'wil' | 'morale';
 
   interface Props {
     members: Saveable[];
@@ -45,24 +45,24 @@
 
   const selected = $derived(members.find((m) => m.id === selectedId) ?? null);
 
-  const attributes: Exclude<Attribute, 'loyalty'>[] = ['str', 'dex', 'wil'];
+  const attributes: Exclude<Attribute, 'morale'>[] = ['str', 'dex', 'wil'];
 
-  // Switching to a member with no Loyalty score while LOY is selected would
+  // Switching to a mouse (no morale saves) while Morale is selected would
   // strand the dock on an attribute with nothing to roll — fall back to STR.
   $effect(() => {
-    if (attribute === 'loyalty' && selected?.loyalty == null) attribute = 'str';
+    if (attribute === 'morale' && selected?.loyal == null) attribute = 'str';
   });
 
   function roll() {
     if (!selected) return;
-    if (attribute === 'loyalty') {
-      if (selected.loyalty == null) return;
-      const outcome = rollLoyaltySave(selected.loyalty);
+    if (attribute === 'morale') {
+      if (selected.loyal == null) return;
+      const outcome = rollMoraleSave(selected.wil, selected.loyal);
       result = {
         name: selected.name,
         attribute,
         dice: outcome.dice,
-        notation: '2d6',
+        notation: outcome.advantage ? '2d20 (Adv)' : 'd20',
         roll: outcome.roll,
         passed: outcome.passed,
       };
@@ -83,7 +83,7 @@
       total={result.roll}
       outcome={result.passed ? 'success' : 'fail'}
       label={$_('liveSession.saveResultLabel', {
-        values: { name: result.name, attribute: result.attribute === 'loyalty' ? 'LOY' : result.attribute.toUpperCase() },
+        values: { name: result.name, attribute: result.attribute === 'morale' ? $_('liveSession.morale') : result.attribute.toUpperCase() },
       })}
       size="live"
     />
@@ -110,16 +110,16 @@
             {attr.toUpperCase()}{selected ? ` ${selected[attr]}` : ''}
           </Button>
         {/each}
-        {#if selected?.loyalty != null}
+        {#if selected?.loyal != null}
           <button
             type="button"
-            onclick={() => (attribute = 'loyalty')}
+            onclick={() => (attribute = 'morale')}
             class="inline-flex items-center justify-center gap-2 rounded-[var(--radius-md)] font-[family-name:var(--font-display)] font-semibold leading-none cursor-pointer min-h-[var(--tap)] py-[var(--pad-control-y)] px-[var(--pad-control-x)] text-[length:var(--text-body)] transition-[background,transform,border-color] duration-[calc(var(--dur-fast)*1ms)] ease-[var(--ease)] active:translate-y-px {attribute ===
-            'loyalty'
+            'morale'
               ? 'bg-[var(--accent)] text-[var(--on-accent)] border border-[var(--accent)] shadow-[var(--shadow-sm)]'
               : 'bg-[var(--accent-tint)] text-[var(--accent)] border border-[var(--accent)]'}"
           >
-            LOY {selected.loyalty}
+            {$_('liveSession.morale')} {selected.wil}{selected.loyal ? ' · Adv' : ''}
           </button>
         {/if}
       </div>

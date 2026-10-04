@@ -111,4 +111,25 @@ describe('Sessions', () => {
       expect(screen.queryByText('Confront the envoy')).not.toBeInTheDocument();
     });
   });
+
+  describe('quick-find focus hand-off', () => {
+    it('opens the matching session edit modal and consumes the focus request', () => {
+      replaceSessions([{ id: 's1', number: 1, date: '2026-01-01', title: 'Into the sewers', summary: '' }]);
+      const onconsumedfocus = vi.fn();
+      render(Sessions, { props: { onnavigate: vi.fn(), focusId: 's1', onconsumedfocus } });
+
+      expect(screen.getByRole('dialog')).toBeInTheDocument();
+      expect(within(screen.getByRole('dialog')).getByDisplayValue('Into the sewers')).toBeInTheDocument();
+      expect(onconsumedfocus).toHaveBeenCalledOnce();
+    });
+
+    it('is a quiet no-op when focusId matches no session', () => {
+      replaceSessions([{ id: 's1', number: 1, date: '2026-01-01', title: 'Into the sewers', summary: '' }]);
+      const onconsumedfocus = vi.fn();
+      render(Sessions, { props: { onnavigate: vi.fn(), focusId: 'missing', onconsumedfocus } });
+
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+      expect(onconsumedfocus).toHaveBeenCalledOnce();
+    });
+  });
 });

@@ -2,6 +2,7 @@
   import { Plus, Pencil, Trash2 } from 'lucide-svelte';
   import { _ } from 'svelte-i18n';
   import AppSidebar, { type NavScreen } from '../layout/AppSidebar.svelte';
+  import type { SearchResult } from '../ui/QuickFind.svelte';
   import Button from '../ui/Button.svelte';
   import Card from '../ui/Card.svelte';
   import StatusPill from '../ui/StatusPill.svelte';
@@ -36,9 +37,13 @@
   interface Props {
     onnavigate: (screen: NavScreen) => void;
     onstartsession?: () => void;
+    onselectresult?: (result: SearchResult) => void;
+    /** Set by `App.svelte` when quick-find selects a beat on this screen — opens that beat's edit modal, then `onconsumedfocus` clears it. */
+    focusId?: string | undefined;
+    onconsumedfocus?: () => void;
   }
 
-  let { onnavigate, onstartsession }: Props = $props();
+  let { onnavigate, onstartsession, onselectresult, focusId, onconsumedfocus }: Props = $props();
 
   const adventures = getAdventures();
   const beats = getBeats();
@@ -65,6 +70,20 @@
     | null
   >(null);
   let deleteBeatTarget = $state<Beat | null>(null);
+
+  // Quick-find hand-off: opens the matching beat's edit modal once, then
+  // tells `App.svelte` the focus request has been used. `BeatTree` always
+  // renders every beat (it has no collapse/expand state to manage), so no
+  // "auto-expand the ancestor chain" work is needed here — the beat is
+  // already visible in the tree the moment the modal is dismissed. A
+  // `focusId` matching no beat (deleted in another tab) is a quiet no-op —
+  // see App.svelte's `selectSearchResult` doc comment.
+  $effect(() => {
+    if (!focusId) return;
+    const beat = beats.find((b) => b.id === focusId);
+    if (beat) beatModal = { mode: 'edit', beat };
+    onconsumedfocus?.();
+  });
 
   const statusTone: Record<AdventureStatus, 'neutral' | 'accent' | 'success'> = {
     planned: 'neutral',
@@ -119,7 +138,7 @@
 </script>
 
 <div class="flex flex-col md:flex-row min-h-screen bg-[var(--bg)] text-[var(--text)]">
-  <AppSidebar active="adventure" {onnavigate} {onstartsession} />
+  <AppSidebar active="adventure" {onnavigate} {onstartsession} {onselectresult} />
 
   <main class="flex-1 p-[var(--sp-6)] max-w-[var(--content-max)] flex flex-col gap-[var(--sp-5)]">
     <header class="flex items-end justify-between gap-[var(--sp-4)] flex-wrap">
