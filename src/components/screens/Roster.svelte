@@ -55,14 +55,6 @@
   const activeHirelings = $derived(hirelings.filter((h) => h.status === 'active'));
   const fallenHirelings = $derived(hirelings.filter((h) => h.status === 'deceased'));
 
-  // Retainer limit (Mausritter core): each mouse's WIL score is how many
-  // hirelings it can individually command, but this is tracked as a single
-  // collective capacity across the whole party rather than assigning specific
-  // hirelings to specific mice — there's no UI for that assignment, just a
-  // live "are we over capacity" fact that recomputes as the roster changes.
-  const partyWilCapacity = $derived(activeParty.reduce((sum, m) => sum + m.wil, 0));
-  const overHirelingLimit = $derived(activeHirelings.length > partyWilCapacity);
-
   let memberModal = $state<{ mode: 'add' } | { mode: 'edit'; member: PartyMember } | null>(null);
   let hirelingModal = $state<{ mode: 'add' } | { mode: 'edit'; hireling: Hireling } | null>(null);
   let deleteMemberTarget = $state<PartyMember | null>(null);
@@ -297,13 +289,6 @@
           </Button>
         {/snippet}
         <div class="flex flex-col gap-[var(--sp-3)]">
-          {#if overHirelingLimit}
-            <div
-              class="rounded-[var(--radius-md)] border border-[var(--warning)] bg-[var(--warning-tint)] text-[var(--warning-hover)] px-[var(--sp-4)] py-[var(--sp-3)] text-[length:var(--text-body)]"
-            >
-              {$_('roster.hirelings.hirelingLimitWarning')}
-            </div>
-          {/if}
           {#each activeHirelings as hireling (hireling.id)}
             <div class="flex flex-wrap items-center gap-x-[var(--sp-4)] gap-y-2 py-2 border-b border-[var(--border)]">
               <div class="min-w-23 flex flex-col gap-1">
@@ -323,8 +308,11 @@
                 />
               </div>
               <div class="flex-1 min-w-35"><HpBar value={hireling.hp} max={hireling.max} label={$_('roster.form.hp')} size="sm" /></div>
-              <div class="shrink-0">
-                <StatusPill tone="accent" size="sm" count={hireling.loyalty}>{$_('roster.form.loyalty')}</StatusPill>
+              <div class="shrink-0 flex gap-1">
+                <StatusPill tone="accent" size="sm" count={hireling.wil}>{$_('liveSession.morale')}</StatusPill>
+                {#if hireling.loyal}
+                  <StatusPill tone="success" size="sm">{$_('roster.loyalTag')}</StatusPill>
+                {/if}
               </div>
               <div class="flex gap-1 shrink-0">
                 <button

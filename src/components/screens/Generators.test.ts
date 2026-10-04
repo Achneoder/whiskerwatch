@@ -107,7 +107,7 @@ describe('Generators', () => {
     await fireEvent.click(screen.getByRole('button', { name: 'Roll Reaction' }));
 
     expect(screen.getByText('Helpful')).toBeInTheDocument();
-    expect(screen.getByText('Actively helps, and offers a service.')).toBeInTheDocument();
+    expect(screen.getByText('How can they help the mice?')).toBeInTheDocument();
 
     spy.mockRestore();
   });

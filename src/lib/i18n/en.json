@@ -107,7 +107,7 @@
     "strSaveFailed": "STR save: rolled {roll} vs {score} — Failed (Injured, Incapacitated)",
     "confirmDeathAction": "Confirm death",
     "deathTitle": "Confirm death?",
-    "deathMessage": "{name} has been reduced to 0 STR — a Fatal Wound. This permanently removes them from active play and can't be undone.",
+    "deathMessage": "{name} has been reduced to 0 STR and is dead. This permanently removes them from active play and can't be undone.",
     "causeOfDeath": "Cause of death (optional)",
     "causeOfDeathPlaceholder": "Overrun by the barn cat's claws…",
     "cancel": "Cancel",
@@ -127,14 +127,10 @@
     "chargeEmpty": "{name} is empty.",
     "chargeUsedUp": "{name} burned out.",
     "chargeCellAria": "{name}, {current} of {max} charges, tap to use one",
-    "loyaltySaveAria": "Roll a loyalty save for {name}, loyalty {loyalty}",
-    "loyaltySavePassed": "Loyalty save: {roll} vs {score} — Passed",
-    "loyaltySaveFailed": "Loyalty save: {roll} vs {score} — Failed",
     "payDay": "Pay day",
     "payDayTitle": "Pay day",
     "payDayPaid": "Paid",
     "payDayUnpaid": "Unpaid",
-    "rollLoyaltySave": "Roll loyalty save",
     "encounter": {
       "eyebrow": "Encounter",
       "roll": "Roll an encounter",
@@ -184,7 +180,13 @@
       "exhaustedBanner": "No rest yesterday — apply Exhausted to the party?",
       "applyExhausted": "Apply",
       "dismissExhausted": "Dismiss"
-    }
+    },
+    "morale": "Morale",
+    "moraleSaveAria": "Roll a morale save for {name}, WIL {wil}",
+    "moraleSaveAriaAdv": "Roll a morale save for {name}, WIL {wil}, with Advantage",
+    "moraleSavePassed": "Morale save: {roll} vs WIL {score} — Stays",
+    "moraleSaveFailed": "Morale save: {roll} vs WIL {score} — Flees",
+    "rollMoraleSave": "Roll morale save"
   },
   "recap": {
     "eyebrow": "Live · End of session",
@@ -223,8 +225,7 @@
       "addTitle": "Add a hireling",
       "editTitle": "Edit hireling",
       "deleteTitle": "Delete hireling?",
-      "deleteMessage": "This removes {name} from the roster. This can't be undone — but nothing else in the campaign changes.",
-      "hirelingLimitWarning": "This party has more hirelings than its mice can command (WIL limit) — still fine to play, but Loyalty checks may get messy."
+      "deleteMessage": "This removes {name} from the roster. This can't be undone — but nothing else in the campaign changes."
     },
     "form": {
       "name": "Name",
@@ -233,16 +234,17 @@
       "hp": "HP",
       "maxHp": "Max HP",
       "pips": "Pips",
-      "loyalty": "Loyalty",
       "notes": "Notes",
       "notesPlaceholder": "Wage, gear carried, quirks…",
       "conditions": "Conditions",
       "addCondition": "Add",
       "cancel": "Cancel",
-      "save": "Save"
+      "save": "Save",
+      "wil": "WIL",
+      "loyal": "Loyal or well-paid"
     },
     "scars": {
-      "eyebrow": "Fatal Wounds",
+      "eyebrow": "Scars",
       "add": "Scar",
       "addTitle": "Add Scar",
       "submit": "Add Scar",
@@ -256,7 +258,8 @@
       "allTitle": "{name}'s scars"
     },
     "fallen": "Fallen ({count})",
-    "deceased": "Deceased"
+    "deceased": "Deceased",
+    "loyalTag": "Loyal"
   },
   "inventory": {
     "heading": "Inventory",
@@ -269,13 +272,10 @@
     "slotSingular": "slot",
     "slotPlural": "slots",
     "chargesAria": "{current} of {max} charges remaining",
-    "overburdenedTitle": "Overburdened.",
-    "overburdenedMessage": "A mouse can't carry more than 10 slots — drop something before the next scene.",
     "move": "Move",
     "moveAria": "Move {name}",
     "moveTo": "Move {item} to:",
     "back": "Back",
-    "willOverburden": "will be overburdened",
     "noRecipients": "No one else to hand this off to.",
     "form": {
       "name": "Name",
@@ -285,7 +285,11 @@
       "notesPlaceholder": "d6 damage, Armor 2, keepsake…",
       "editingSlot": "Editing slot"
     },
-    "removeItem": "Remove item"
+    "removeItem": "Remove item",
+    "pack": "Pack",
+    "encumberedTitle": "Encumbered.",
+    "encumberedMessage": "More items than slots — can't run, and every save is made with Disadvantage until something is dropped.",
+    "willEncumber": "will be encumbered"
   },
   "adventure": {
     "eyebrow": "Prep mode · adventure",
@@ -596,16 +600,16 @@
     "band": {
       "hostile": "Hostile",
       "unfriendly": "Unfriendly",
-      "neutral": "Neutral",
-      "friendly": "Friendly",
+      "unsure": "Unsure",
+      "talkative": "Talkative",
       "helpful": "Helpful"
     },
     "guidance": {
-      "hostile": "Attacks or otherwise acts against the party.",
-      "unfriendly": "Does the opposite of what's asked, may attack.",
-      "neutral": "Uncertain, will act to preserve itself.",
-      "friendly": "Does as asked, if not put in danger.",
-      "helpful": "Actively helps, and offers a service."
+      "hostile": "How have the mice angered them?",
+      "unfriendly": "How can they be appeased?",
+      "unsure": "What could win them over?",
+      "talkative": "What could they trade?",
+      "helpful": "How can they help the mice?"
     }
   },
   "rulesDrawer": {
@@ -618,7 +622,7 @@
       "inventory": "Inventory",
       "reaction": "Reaction",
       "advancement": "Advancement",
-      "retainers": "Retainers"
+      "hirelings": "Hirelings"
     },
     "saves": {
       "heading": "Saves",
@@ -628,7 +632,7 @@
     "damage": {
       "heading": "Damage & the death spiral",
       "body": "Damage hits HP first. Once HP is empty, remaining damage overflows into STR. Any STR lost means an immediate STR save is required. A failed STR save applies Injured and Incapacitated. If STR is driven to exactly 0, the mouse dies immediately — no save, no wound roll.",
-      "note": "SRD note: this app skips the SRD's 2d6 Fatal Wounds table — 0 STR is a clean death, not a roll for what kind of wound it is."
+      "note": "SRD note: there's no wound table — 0 STR is death. An incapacitated creature left untended for 6 Turns also dies."
     },
     "conditions": {
       "heading": "Conditions",
@@ -656,13 +660,14 @@
         },
         "unconscious": {
           "label": "Unconscious",
-          "note": "Out cold from a Fatal Wound. Cleared by tending or rest."
+          "note": "Out cold and unable to act. Cleared by tending or rest."
         }
       }
     },
     "inventory": {
       "heading": "Inventory & slots",
-      "body": "Every mouse and hireling has a fixed 10 slots: 6 body + 4 paws (paws fill first, for quick access). Most items take 1 slot; bulky gear (heavy armor, two-handed weapons, large treasure) takes 2. A handful of items (worn clothes, natural claws and teeth) take 0. Chargeable items (lanterns, spells, rope) track charges on a wear pip-track — tick one down per use. Going over 10 slots shows a warning, not a hard block."
+      "body": "A mouse has 10 slots: 2 paw slots (items in paw), 2 body slots (worn; swap with paws as a free action) and 6 pack slots (in combat, finding an item takes your action). Hirelings have 6: 2 paw, 2 body, 2 pack. Most items take 1 slot; armour and two-handed weapons take 2. Conditions take up slots too (the app doesn't place them in the grid, so count them yourself). Carrying more than you have slots makes you encumbered: you can't run and make every save with Disadvantage.",
+      "usage": "Usage: most items have 3 usage dots; when all are marked the item is depleted or destroyed. Weapons, armour and ammunition: after a fight, roll d6 for each one used — mark usage on 4–6. Torches and lanterns: every 6 Turns. Rations: after a meal."
     },
     "reaction": {
       "heading": "Reaction roll",
@@ -670,20 +675,21 @@
       "range": {
         "hostile": "2",
         "unfriendly": "3–5",
-        "neutral": "6–8",
-        "friendly": "9–11",
+        "unsure": "6–8",
+        "talkative": "9–11",
         "helpful": "12"
       }
     },
     "advancement": {
       "heading": "Advancement",
-      "body": "XP comes from pips spent in downtime (carousing, gear, keepsakes) — never from kills or combat.",
-      "rate": "1 XP per 10 pips spent.",
+      "body": "XP comes from bringing treasure and useful goods back from places of danger to the safety of a settlement: 1 XP per pip-worth, divided equally among the party. Never from kills or combat.",
+      "rate": "Bonus XP: 1 XP per 10 pips spent selflessly on improvements for the whole community.",
       "thresholds": "Level thresholds: 1,000 / 3,000 / 6,000 / 11,000 / 16,000 XP, then +5,000 XP per level after that."
     },
-    "retainers": {
-      "heading": "Retainer limit",
-      "body": "A mouse can command a number of hirelings equal to their WIL score. This is per mouse, summed across the whole party for the party's total hireling capacity."
+    "hirelings": {
+      "heading": "Hirelings",
+      "morale": "Morale: when a hireling is put in a stressful situation, goes without pay or food, or is asked to do something more dangerous than they signed on for, they make a WIL save or flee. Especially well-paid or loyal hirelings roll it with Advantage.",
+      "body": "Hirelings are paid wages daily and have 6 inventory slots (2 paw, 2 body, 2 pack). A hireling given a share of treasure earns 1 XP per pip above their daily wage."
     }
   },
   "search": {
@@ -720,14 +726,14 @@
   },
   "help": {
     "ariaLabel": "Help: {label}",
-    "hp": "Hit Protection — dodging and shrugging off harm, not flesh. Damage comes off HP first; once it's gone, damage drains STR and calls for a STR save. A short rest restores some HP, a long rest (one watch) all of it.",
+    "hp": "Hit Protection — dodging and shrugging off harm, not flesh. Damage comes off HP first; once it's gone, damage drains STR and calls for a STR save. A short rest restores d6+1 HP, a long rest (one watch) all of it.",
     "pips": "Mausritter's currency, spent on gear, wages, lodging and downtime.",
     "wage": "Pips this hireling is paid per day.",
-    "loyalty": "Loyalty saves roll 2d6: at or under this score, the hireling stays. Call for one if they go unpaid or unfed, or are ordered into more danger than they signed on for.",
+    "loyalty": "Especially loyal or well-paid hirelings roll morale saves with Advantage. A morale save is a WIL save, called for when a hireling is stressed, unpaid or unfed, or asked to do something more dangerous than they signed on for — on a failure they flee.",
     "armor": "Subtracted from every hit this creature takes. Most creatures have 0–2.",
-    "inventory": "Every mouse has 10 slots: 2 paws, 2 body, 6 pack. Paws and body are ready to hand; the pack takes time to dig through. Past 10 slots, something has to be dropped.",
-    "slots": "How many inventory slots this item fills. Bulky things like heavy armour or big weapons take 2.",
-    "charges": "Usage dots (most items have 3). Mark one per meal for rations, per 6 turns for torches, and after a fight for weapons and armour. All marked means used up or broken; 0 means it doesn't wear out.",
+    "inventory": "Every mouse has 10 slots: 2 paw, 2 body, 6 pack (hirelings have 2/2/2). Paws and body are ready to hand; in a fight, digging something out of the pack takes your action. Carrying more than you have slots makes you encumbered: no running, and Disadvantage on every save.",
+    "slots": "How many inventory slots this item fills. Armour and two-handed weapons take 2.",
+    "charges": "Usage dots (most items have 3). Weapons, armour and ammo: after a fight, roll d6 for each one used and mark on 4–6. Torches: every 6 Turns. Rations: after a meal. All marked means used up or broken; 0 means it doesn't wear out.",
     "disposition": "How this faction currently regards the party. Colours how its members react in play.",
     "clock": "Progress toward the faction's current goal. Advance it as they act between sessions; when every segment is filled, the goal comes to pass.",
     "terrain": "Sets travel speed: crossing a hex takes 1 watch on foot, or 2 through forest or hills. Water can't be crossed on foot.",
@@ -735,6 +741,7 @@
     "watch": "A day has four watches. Travelling a hex, foraging or a long rest each takes one. Check for an encounter in the morning and evening watches. A mouse that gets no long rest during a day becomes Exhausted.",
     "reaction": "Roll 2d6 when the party meets a creature whose attitude isn't obvious: low results are hostile, high results helpful. A starting point for the scene, not a script.",
     "backup": "Your campaign lives only in this browser. Clearing site data or losing the device erases it. An exported file is your backup — and lets you move the campaign to another device.",
-    "reactionLabel": "Reaction roll"
+    "reactionLabel": "Reaction roll",
+    "wil": "Willpower. Hirelings roll morale saves against it: d20, at or under passes. Typical hirelings have 2d6 WIL."
   }
 }

@@ -16,7 +16,8 @@ export interface Hireling {
   dex: number;
   /** Static WIL score — no "current vs max" distinction. */
   wil: number;
-  loyalty: number;
+  /** Especially well-paid or loyal (SRD): morale saves roll with Advantage. */
+  loyal: boolean;
   /** Plain GM-entered pips/day — no formula/auto-population from role. */
   wage: number;
   notes: string;
@@ -24,7 +25,7 @@ export interface Hireling {
   conditions: ConditionName[];
   /** Permanent Fatal Wounds outcomes — separate from `conditions`, never auto-cleared. */
   scars: Scar[];
-  /** Flat inventory list — see `items.ts` for the fixed 10-slot cap this is checked against (not reduced for hirelings). */
+  /** Flat inventory list — checked against `HIRELING_LAYOUT`'s 6 slots (see `items.ts`). */
   items: Item[];
 }
 
@@ -41,7 +42,7 @@ const seedHirelings: Hireling[] = [
     maxStr: 10,
     dex: 10,
     wil: 10,
-    loyalty: 4,
+    loyal: false,
     wage: 5,
     notes: 'Carries the spare rope and two rations. Paid 5p/day.',
     status: 'active',
@@ -89,7 +90,9 @@ function normalizeHireling(raw: unknown): Hireling {
     maxStr,
     dex: typeof r.dex === 'number' ? r.dex : 10,
     wil: typeof r.wil === 'number' ? r.wil : 10,
-    loyalty: typeof r.loyalty === 'number' ? r.loyalty : 4,
+    // Pre-SRD-fix records carried a 2d6 `loyalty` score instead; it has no
+    // SRD equivalent, so it's dropped rather than mapped.
+    loyal: r.loyal === true,
     wage: typeof r.wage === 'number' ? r.wage : 0,
     notes: typeof r.notes === 'string' ? r.notes : '',
     status: r.status === 'deceased' ? 'deceased' : 'active',

@@ -2,10 +2,11 @@
   import { _ } from 'svelte-i18n';
   import Input from '../ui/Input.svelte';
   import Stepper from '../ui/Stepper.svelte';
+  import HelpTip from '../ui/HelpTip.svelte';
   import Button from '../ui/Button.svelte';
   import ItemSlotGrid from './ItemSlotGrid.svelte';
   import { CONDITIONS, type ConditionName } from '../../lib/conditions';
-  import { addItem, removeItem, updateItem, type Item } from '../../lib/items';
+  import { addItem, removeItem, updateItem, HIRELING_LAYOUT, type Item } from '../../lib/items';
   import type { Hireling } from '../../lib/stores/hirelings.svelte';
 
   interface Props {
@@ -20,20 +21,21 @@
   let role = $state(initial?.role ?? '');
   let hp = $state(initial?.hp ?? 3);
   let max = $state(initial?.max ?? 3);
-  // 2d6 average — new hirelings start at a plausible mid-band Loyalty
-  // instead of an arbitrary low number now that the real 2–12 scale is used.
-  let loyalty = $state(initial?.loyalty ?? 7);
+  // SRD hirelings roll WIL on 2d6 — new ones start at its average.
+  let wil = $state(initial?.wil ?? 7);
+  let loyal = $state(initial?.loyal ?? false);
   // Plain GM-entered number, kept as text while editing (converted on
   // submit) so the field behaves like a normal text input rather than a
-  // Stepper — wage isn't bumped mid-encounter the way HP/loyalty are.
+  // Stepper — wage isn't bumped mid-encounter the way HP is.
   let wageInput = $state(String(initial?.wage ?? 0));
   let notes = $state(initial?.notes ?? '');
   let conditions = $state<ConditionName[]>(initial ? [...initial.conditions] : []);
   let items = $state<Item[]>(initial ? [...initial.items] : []);
 
-  // STR/DEX/WIL and status/scars aren't editable from this form yet (that's
-  // a follow-up pass) — an edit carries the hireling's existing values
-  // forward unchanged, and a new hireling starts with placeholder scores.
+  // STR/DEX and status/scars aren't editable from this form yet (that's a
+  // follow-up pass) — an edit carries the hireling's existing values forward
+  // unchanged, and a new hireling starts with placeholder scores. WIL is
+  // editable because morale saves roll against it.
   const conditionNames = Object.keys(CONDITIONS) as ConditionName[];
 
   $effect(() => {
@@ -50,10 +52,10 @@
     event.preventDefault();
     if (!name.trim()) return;
     const attributes = initial
-      ? { str: initial.str, maxStr: initial.maxStr, dex: initial.dex, wil: initial.wil, status: initial.status, scars: initial.scars }
-      : { str: 10, maxStr: 10, dex: 10, wil: 10, status: 'active' as const, scars: [] };
+      ? { str: initial.str, maxStr: initial.maxStr, dex: initial.dex, status: initial.status, scars: initial.scars }
+      : { str: 10, maxStr: 10, dex: 10, status: 'active' as const, scars: [] };
     const wage = Math.max(0, Number(wageInput) || 0);
-    onsave({ name: name.trim(), role: role.trim(), hp, max, loyalty, wage, notes: notes.trim(), conditions, items, ...attributes });
+    onsave({ name: name.trim(), role: role.trim(), hp, max, wil, loyal, wage, notes: notes.trim(), conditions, items, ...attributes });
   }
 </script>
 
@@ -69,15 +71,15 @@
   <div class="flex gap-[var(--sp-5)] flex-wrap">
     <Stepper label={$_('roster.form.hp')} help={$_('help.hp')} value={hp} min={0} max={max} size="md" onchange={(v) => (hp = v)} />
     <Stepper label={$_('roster.form.maxHp')} value={max} min={1} max={12} size="md" onchange={(v) => (max = v)} />
-    <Stepper
-      label={$_('roster.form.loyalty')}
-      help={$_('help.loyalty')}
-      value={loyalty}
-      min={2}
-      max={18}
-      size="md"
-      onchange={(v) => (loyalty = v)}
-    />
+    <Stepper label={$_('roster.form.wil')} help={$_('help.wil')} value={wil} min={1} max={18} size="md" onchange={(v) => (wil = v)} />
+  </div>
+
+  <div class="flex items-center gap-1.5">
+    <label class="inline-flex items-center gap-2 text-[length:var(--text-body)] cursor-pointer select-none min-h-[var(--tap)]">
+      <input type="checkbox" bind:checked={loyal} />
+      {$_('roster.form.loyal')}
+    </label>
+    <HelpTip text={$_('help.loyalty')} label={$_('roster.form.loyal')} />
   </div>
 
   <Input label={$_('roster.form.notes')} bind:value={notes} placeholder={$_('roster.form.notesPlaceholder')} />
@@ -100,6 +102,7 @@
 
   <ItemSlotGrid
     {items}
+    layout={HIRELING_LAYOUT}
     onadd={(input) => (items = addItem(items, input))}
     onremove={(itemId) => (items = removeItem(items, itemId))}
     onupdate={(itemId, patch) => (items = updateItem(items, itemId, patch))}

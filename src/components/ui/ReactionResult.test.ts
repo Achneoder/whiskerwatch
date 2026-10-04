@@ -8,7 +8,7 @@ function result(overrides: Partial<ReactionRollResult> = {}): ReactionRollResult
     dice: [1, 1],
     total: 2,
     band: 'hostile',
-    guidance: 'Attacks or otherwise acts against the party.',
+    guidance: 'How have the mice angered them?',
     ...overrides,
   };
 }
@@ -18,11 +18,11 @@ describe('ReactionResult', () => {
     render(ReactionResult, { props: { result: result() } });
 
     expect(screen.getByText('Hostile')).toBeInTheDocument();
-    expect(screen.getByText('Attacks or otherwise acts against the party.')).toBeInTheDocument();
+    expect(screen.getByText('How have the mice angered them?')).toBeInTheDocument();
   });
 
   it('shows the dice faces and total', () => {
-    render(ReactionResult, { props: { result: result({ dice: [3, 4], total: 7, band: 'neutral' }) } });
+    render(ReactionResult, { props: { result: result({ dice: [3, 4], total: 7, band: 'unsure' }) } });
 
     expect(screen.getByText('3')).toBeInTheDocument();
     expect(screen.getByText('4')).toBeInTheDocument();
@@ -31,7 +31,7 @@ describe('ReactionResult', () => {
 
   it.each([
     ['unfriendly', 'Unfriendly'],
-    ['friendly', 'Friendly'],
+    ['talkative', 'Talkative'],
     ['helpful', 'Helpful'],
   ] as const)('renders the %s band label as %s', (band, label) => {
     render(ReactionResult, { props: { result: result({ band }) } });

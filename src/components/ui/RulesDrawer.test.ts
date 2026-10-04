@@ -12,7 +12,7 @@ describe('RulesDrawer', () => {
     expect(screen.getByRole('heading', { name: 'Inventory & slots' })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Reaction roll' })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Advancement' })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: 'Retainer limit' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Hirelings' })).toBeInTheDocument();
   });
 
   it('lists all six of the standardized conditions from lib/conditions.ts', () => {

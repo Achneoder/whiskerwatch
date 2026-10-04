@@ -5,7 +5,15 @@
   import Icon from '../ui/Icon.svelte';
   import Button from '../ui/Button.svelte';
   import Tag from '../ui/Tag.svelte';
-  import { MAX_SLOTS, PAWS_SLOTS, BODY_SLOTS, usedSlots, splitSections, type Item } from '../../lib/items';
+  import {
+    MOUSE_LAYOUT,
+    HIRELING_LAYOUT,
+    capacity,
+    usedSlots,
+    splitSections,
+    type InventoryLayout,
+    type Item,
+  } from '../../lib/items';
 
   interface Notice {
     text: string;
@@ -23,6 +31,8 @@
   interface Props {
     name: string;
     items: Item[];
+    /** The bag owner's slot layout — a player mouse's unless this is a hireling's bag. */
+    layout?: InventoryLayout;
     open: boolean;
     notice?: Notice | null;
     /** Every other active party member/hireling this item could be handed off to — computed by `LiveSession.svelte`, this modal never reaches into the stores itself. */
@@ -40,6 +50,7 @@
   let {
     name,
     items,
+    layout = MOUSE_LAYOUT,
     open,
     notice = null,
     recipients,
@@ -63,7 +74,7 @@
    * Static counterpart to `ItemSlotGrid`'s `buildCells` — pads a section's
    * items out to its nominal slot budget with empty placeholder cells, but
    * (unlike the roster editor) never guarantees a minimum of one: this
-   * modal has no add affordance, so an overburdened section with zero
+   * modal has no add affordance, so an encumbered section with zero
    * spare capacity legitimately renders no empties at all.
    */
   function buildCells(sectionItems: Item[], sectionSlots: number, prefix: string): CellEntry[] {
@@ -76,10 +87,12 @@
     return cells;
   }
 
-  const sections = $derived(splitSections(items));
-  const pawsCells = $derived(buildCells(sections.paws, PAWS_SLOTS, 'paws'));
-  const bodyCells = $derived(buildCells(sections.body, BODY_SLOTS, 'body'));
+  const split = $derived(splitSections(items, layout));
+  const sections = $derived(
+    (['paws', 'body', 'pack'] as const).map((id) => ({ id, cells: buildCells(split[id], layout[id], id) })),
+  );
   const used = $derived(usedSlots(items));
+  const max = $derived(capacity(layout));
 
   const movingItem = $derived(movingItemId ? (items.find((i) => i.id === movingItemId) ?? null) : null);
 
@@ -149,7 +162,8 @@
       <div class="flex flex-col gap-2">
         {#each recipients as recipient (recipient.id)}
           {@const recipientUsed = usedSlots(recipient.items)}
-          {@const wouldOverburden = recipientUsed + movingItem.slots > MAX_SLOTS}
+          {@const recipientMax = capacity(recipient.kind === 'hireling' ? HIRELING_LAYOUT : MOUSE_LAYOUT)}
+          {@const wouldEncumber = recipientUsed + movingItem.slots > recipientMax}
           <button
             type="button"
             onclick={() => onmove(movingItem.id, recipient.id)}
@@ -162,10 +176,10 @@
               {/if}
             </span>
             <span
-              class="ww-num text-[length:var(--text-sm)] {wouldOverburden ? 'text-[var(--warning)]' : ''}"
+              class="ww-num text-[length:var(--text-sm)] {wouldEncumber ? 'text-[var(--warning)]' : ''}"
             >
-              {recipientUsed}/{MAX_SLOTS}
-              {#if wouldOverburden}<span class="ww-label ml-1">{$_('inventory.willOverburden')}</span>{/if}
+              {recipientUsed}/{recipientMax}
+              {#if wouldEncumber}<span class="ww-label ml-1">{$_('inventory.willEncumber')}</span>{/if}
             </span>
           </button>
         {/each}
@@ -175,34 +189,23 @@
       </div>
     {:else}
       <div class="font-[family-name:var(--font-mono)] text-[length:var(--text-sm)] text-[var(--text-secondary)]">
-        {$_('inventory.slotsUsed', { values: { used, max: MAX_SLOTS } })}
+        {$_('inventory.slotsUsed', { values: { used, max } })}
       </div>
 
-      <div>
-        <div class="ww-label text-[length:var(--text-caption)] mb-1.5">{$_('inventory.paws')}</div>
-        <div class="grid grid-cols-2 gap-2">
-          {#each pawsCells as entry (entry.type === 'item' ? entry.item.id : entry.key)}
-            {#if entry.type === 'item'}
-              {@render cell(entry.item)}
-            {:else}
-              {@render empty()}
-            {/if}
-          {/each}
+      {#each sections as section (section.id)}
+        <div>
+          <div class="ww-label text-[length:var(--text-caption)] mb-1.5">{$_(`inventory.${section.id}`)}</div>
+          <div class="grid grid-cols-2 gap-2">
+            {#each section.cells as entry (entry.type === 'item' ? entry.item.id : entry.key)}
+              {#if entry.type === 'item'}
+                {@render cell(entry.item)}
+              {:else}
+                {@render empty()}
+              {/if}
+            {/each}
+          </div>
         </div>
-      </div>
-
-      <div>
-        <div class="ww-label text-[length:var(--text-caption)] mb-1.5 mt-1">{$_('inventory.body')}</div>
-        <div class="grid grid-cols-2 gap-2">
-          {#each bodyCells as entry (entry.type === 'item' ? entry.item.id : entry.key)}
-            {#if entry.type === 'item'}
-              {@render cell(entry.item)}
-            {:else}
-              {@render empty()}
-            {/if}
-          {/each}
-        </div>
-      </div>
+      {/each}
     {/if}
 
     {#if notice}

@@ -14,7 +14,7 @@ describe('liveSessionLog', () => {
 
   it('assigns a stable id to logged events and keeps them in log order', () => {
     logEvent({ kind: 'death', name: 'Pip', role: 'party' });
-    logEvent({ kind: 'loyaltyFailed', name: 'Oat' });
+    logEvent({ kind: 'moraleFailed', name: 'Oat' });
 
     const events = getLiveSessionEvents();
     expect(events).toHaveLength(2);
@@ -73,8 +73,8 @@ describe('liveSessionLog', () => {
       expect(text.toLowerCase()).not.toContain('leveled up');
     });
 
-    it('describes a failed loyalty save', () => {
-      expect(describeEvent({ id: '1', kind: 'loyaltyFailed', name: 'Oat' })).toBe('Oat failed a Loyalty save');
+    it('describes a failed morale save', () => {
+      expect(describeEvent({ id: '1', kind: 'moraleFailed', name: 'Oat' })).toBe('Oat failed a morale save');
     });
   });
 
@@ -91,8 +91,8 @@ describe('liveSessionLog', () => {
       ).toBe('factions');
     });
 
-    it('groups loyalty failures under hirelings regardless of role', () => {
-      expect(groupForEvent({ id: '1', kind: 'loyaltyFailed', name: 'Oat' })).toBe('hirelings');
+    it('groups morale failures under hirelings regardless of role', () => {
+      expect(groupForEvent({ id: '1', kind: 'moraleFailed', name: 'Oat' })).toBe('hirelings');
     });
 
     it('groups role-bearing events by their role', () => {

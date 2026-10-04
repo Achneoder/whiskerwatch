@@ -67,7 +67,7 @@ function makeHireling(overrides: Partial<Hireling> = {}): Hireling {
     maxStr: 10,
     dex: 10,
     wil: 10,
-    loyalty: 4,
+    loyal: false,
     wage: 5,
     notes: '',
     status: 'active',

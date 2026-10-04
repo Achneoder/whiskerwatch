@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/svelte';
+import { render, screen, fireEvent, within } from '@testing-library/svelte';
 import HirelingForm from './HirelingForm.svelte';
 
 describe('HirelingForm', () => {
@@ -39,7 +39,7 @@ describe('HirelingForm', () => {
           maxStr: 10,
           dex: 10,
           wil: 10,
-          loyalty: 4,
+          loyal: false,
           wage: 5,
           notes: 'Reliable.',
           status: 'active',
@@ -57,7 +57,7 @@ describe('HirelingForm', () => {
     expect(screen.getByDisplayValue('5')).toBeInTheDocument();
   });
 
-  it('defaults loyalty to 7 (2d6 average) and wage to 0 for a new hireling', async () => {
+  it('defaults WIL to 7 (2d6 average), not loyal, and wage 0 for a new hireling', async () => {
     const onsave = vi.fn();
     render(HirelingForm, { props: { onsave, oncancel: vi.fn() } });
 
@@ -65,7 +65,8 @@ describe('HirelingForm', () => {
     await fireEvent.click(screen.getByRole('button', { name: 'Save' }));
 
     const saved = onsave.mock.calls[0]![0];
-    expect(saved.loyalty).toBe(7);
+    expect(saved.wil).toBe(7);
+    expect(saved.loyal).toBe(false);
     expect(saved.wage).toBe(0);
   });
 
@@ -87,5 +88,27 @@ describe('HirelingForm', () => {
     await fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
 
     expect(oncancel).toHaveBeenCalledOnce();
+  });
+
+  it('saves the Loyal or well-paid toggle and an edited WIL', async () => {
+    const onsave = vi.fn();
+    render(HirelingForm, { props: { onsave, oncancel: vi.fn() } });
+
+    await fireEvent.input(screen.getByLabelText('Name'), { target: { value: 'Clover' } });
+    await fireEvent.click(screen.getByLabelText('Loyal or well-paid'));
+    const wilStepper = screen.getByText('WIL').closest('.flex-col')!;
+    await fireEvent.click(within(wilStepper as HTMLElement).getByRole('button', { name: 'Increase' }));
+    await fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+
+    const saved = onsave.mock.calls[0]![0];
+    expect(saved.loyal).toBe(true);
+    expect(saved.wil).toBe(8);
+  });
+
+  it('shows a 6-slot hireling inventory: 2 paws, 2 body, 2 pack', () => {
+    render(HirelingForm, { props: { onsave: vi.fn(), oncancel: vi.fn() } });
+
+    expect(screen.getByText('0 / 6 slots used')).toBeInTheDocument();
+    expect(screen.getAllByRole('button', { name: 'Empty slot, add item' })).toHaveLength(6);
   });
 });

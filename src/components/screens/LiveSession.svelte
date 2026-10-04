@@ -8,6 +8,7 @@
   import LiveSessionEncounterCard from './LiveSessionEncounterCard.svelte';
   import type { EncounterInstance } from './LiveSessionEncounterInstance.svelte';
   import LiveSessionWatchCard, { type WatchNeighborOption } from './LiveSessionWatchCard.svelte';
+  import { MOUSE_LAYOUT, HIRELING_LAYOUT, capacity } from '../../lib/items';
   import SaveDock from './SaveDock.svelte';
   import ConfirmDialog from '../ui/ConfirmDialog.svelte';
   import Tag from '../ui/Tag.svelte';
@@ -46,7 +47,7 @@
   import { getBestiary, type BestiaryEntry } from '../../lib/stores/bestiary.svelte';
   import type { Item } from '../../lib/items';
   import { getLastSession, getNextSessionNumber, type Session } from '../../lib/stores/sessions.svelte';
-  import { rollSave, rollLoyaltySave } from '../../lib/generators/save';
+  import { rollSave, rollMoraleSave } from '../../lib/generators/save';
   import { rollDice } from '../../lib/generators/roll';
   import { generateEncounterFor } from '../../lib/generators/encounters';
   import { rollReaction, type ReactionRollResult } from '../../lib/generators/reaction';
@@ -81,9 +82,9 @@
   //
   // Three event kinds from the spec (`beatStatusChanged`, `advancement`,
   // `scarGained`) are defined in `liveSessionLog.svelte.ts` but never
-  // logged here: none of beat status, downtime XP/level-up, or scars has a
+  // logged here: none of beat status, XP/level-up, or scars has a
   // mutation point reachable from Live Session today (beat status only
-  // changes from the Adventure screen's `BeatTree`; `spendDowntime` in
+  // changes from the Adventure screen's `BeatTree`; `spendForCommunity` in
   // `party.svelte.ts` and `addScar`/`addHirelingScar` in
   // `party.svelte.ts`/`hirelings.svelte.ts` all have no UI at all yet).
   // Per the brief, that's a reason to skip wiring, not to invent new Live
@@ -403,7 +404,7 @@
 
   const saveableMembers = $derived([
     ...activeParty.map((m) => ({ id: m.id, name: m.name, str: m.str, dex: m.dex, wil: m.wil })),
-    ...activeHirelings.map((h) => ({ id: h.id, name: h.name, str: h.str, dex: h.dex, wil: h.wil, loyalty: h.loyalty })),
+    ...activeHirelings.map((h) => ({ id: h.id, name: h.name, str: h.str, dex: h.dex, wil: h.wil, loyal: h.loyal })),
   ]);
 
   type Source = 'party' | 'hireling';
@@ -436,11 +437,11 @@
   // sitting, not a ledger.
   let payDayOpen = $state(false);
   let paidThisSession = $state<Set<string>>(new Set());
-  let payDayLoyaltyResults = $state<Record<string, { roll: number; score: number; passed: boolean }>>({});
+  let payDayMoraleResults = $state<Record<string, { roll: number; score: number; passed: boolean }>>({});
 
   function openPayDay() {
     paidThisSession = new Set();
-    payDayLoyaltyResults = {};
+    payDayMoraleResults = {};
     payDayOpen = true;
   }
 
@@ -451,14 +452,14 @@
     paidThisSession = next;
   }
 
-  function rollPayDayLoyaltySave(hireling: Hireling) {
-    const outcome = rollLoyaltySave(hireling.loyalty);
-    payDayLoyaltyResults = {
-      ...payDayLoyaltyResults,
+  function rollPayDayMoraleSave(hireling: Hireling) {
+    const outcome = rollMoraleSave(hireling.wil, hireling.loyal);
+    payDayMoraleResults = {
+      ...payDayMoraleResults,
       [hireling.id]: { roll: outcome.roll, score: outcome.score, passed: outcome.passed },
     };
     if (!outcome.passed) {
-      logEvent({ kind: 'loyaltyFailed', name: hireling.name });
+      logEvent({ kind: 'moraleFailed', name: hireling.name });
     }
   }
 
@@ -541,7 +542,7 @@
    * one array, pushed into the other), never a copy — undoable the same
    * "snapshot both sides, restore both sides" way `handleDamage`/
    * `handleHeal` already are across the party/hireling boundary. Per
-   * `lib/items.ts`'s `isOverCapacity` rule, the 10-slot cap is never used to
+   * `lib/items.ts`'s `isOverCapacity` rule, the slot cap is never used to
    * block this — `LiveSessionInventoryModal` only warns.
    */
   function moveItem(itemId: string, toId: string) {
@@ -683,18 +684,17 @@
   }
 
   /**
-   * Loyalty saves never mutate the hireling — the app only reports
-   * pass/fail per the rules; the GM narrates any consequence of a failed
-   * save (loyalty is not auto-decremented). So there's no `before` state to
+   * Morale saves never mutate the hireling — the app only reports
+   * pass/fail per the rules; the GM narrates the flight on a failed save. So there's no `before` state to
    * capture and no undo, unlike `handleDamage`/`handleHeal`.
    */
-  function rollLoyaltySaveFor(hireling: Hireling) {
-    const result = rollLoyaltySave(hireling.loyalty);
-    const key = result.passed ? 'liveSession.loyaltySavePassed' : 'liveSession.loyaltySaveFailed';
-    announce('loyalty:' + hireling.id, $_(key, { values: { roll: result.roll, score: result.score } }));
-    // Only failures are recap-worthy — a passed loyalty save is a non-event.
+  function rollMoraleSaveFor(hireling: Hireling) {
+    const result = rollMoraleSave(hireling.wil, hireling.loyal);
+    const key = result.passed ? 'liveSession.moraleSavePassed' : 'liveSession.moraleSaveFailed';
+    announce('morale:' + hireling.id, $_(key, { values: { roll: result.roll, score: result.score } }));
+    // Only failures are recap-worthy — a passed morale save is a non-event.
     if (!result.passed) {
-      logEvent({ kind: 'loyaltyFailed', name: hireling.name });
+      logEvent({ kind: 'moraleFailed', name: hireling.name });
     }
   }
 
@@ -734,7 +734,8 @@
     deathCause = '';
   }
 
-  const openInventoryMember = $derived(openInventoryId ? sourceAndMemberFor(openInventoryId)?.member ?? null : null);
+  const openInventory = $derived(openInventoryId ? sourceAndMemberFor(openInventoryId) : null);
+  const openInventoryMember = $derived(openInventory?.member ?? null);
 
   function bumpClock(id: string) {
     const faction = factions.find((f) => f.id === id);
@@ -909,10 +910,11 @@
             maxStr: hireling.maxStr,
             conditions: hireling.conditions,
             items: hireling.items,
-            loyalty: hireling.loyalty,
+            slotCapacity: capacity(HIRELING_LAYOUT),
+            morale: { wil: hireling.wil, advantage: hireling.loyal },
           }}
           drawer={drawerFor(hireling.id)}
-          notice={notice && (notice.id === hireling.id || notice.id === 'loyalty:' + hireling.id)
+          notice={notice && (notice.id === hireling.id || notice.id === 'morale:' + hireling.id)
             ? { text: notice.text, undo: notice.undo }
             : null}
           pendingStrSave={pendingStrSave?.id === hireling.id ? pendingStrSave.str : null}
@@ -924,7 +926,7 @@
           onrequestdeath={() => requestDeath('hireling', hireling.id)}
           ondismissnotice={dismissNotice}
           oninventoryopen={() => (openInventoryId = hireling.id)}
-          onrollloyaltysave={() => rollLoyaltySaveFor(hireling)}
+          onrollmoralesave={() => rollMoraleSaveFor(hireling)}
         />
       {/each}
       {#if activeHirelings.length === 0}
@@ -979,6 +981,7 @@
   open={openInventoryMember !== null}
   name={openInventoryMember?.name ?? ''}
   items={openInventoryMember?.items ?? []}
+  layout={openInventory?.source === 'hireling' ? HIRELING_LAYOUT : MOUSE_LAYOUT}
   notice={notice && notice.id.startsWith('item:') ? { text: notice.text, undo: notice.undo } : null}
   {recipients}
   movingItemId={movePickerFor}
@@ -997,7 +1000,7 @@
   <div class="flex flex-col gap-[var(--sp-3)] pb-[var(--sp-4)]">
     {#each activeHirelings as hireling (hireling.id)}
       {@const paid = paidThisSession.has(hireling.id)}
-      {@const loyaltyResult = payDayLoyaltyResults[hireling.id]}
+      {@const moraleResult = payDayMoraleResults[hireling.id]}
       <div class="flex flex-col gap-1.5 py-2 border-b border-[var(--border)] last:border-b-0">
         <div class="flex items-center gap-x-[var(--sp-3)] gap-y-1.5 flex-wrap">
           <span class="font-[family-name:var(--font-display)] font-bold text-[length:var(--text-title)] min-w-20">
@@ -1010,18 +1013,18 @@
             </Tag>
           </div>
           {#if !paid}
-            <Button variant="secondary" size="sm" onclick={() => rollPayDayLoyaltySave(hireling)}>
-              {$_('liveSession.rollLoyaltySave')}
+            <Button variant="secondary" size="sm" onclick={() => rollPayDayMoraleSave(hireling)}>
+              {$_('liveSession.rollMoraleSave')}
             </Button>
           {/if}
         </div>
-        {#if !paid && loyaltyResult}
+        {#if !paid && moraleResult}
           <span
             class="text-[length:var(--text-sm)] font-bold"
-            style:color={loyaltyResult.passed ? 'var(--success)' : 'var(--danger-hover)'}
+            style:color={moraleResult.passed ? 'var(--success)' : 'var(--danger-hover)'}
           >
-            {$_(loyaltyResult.passed ? 'liveSession.loyaltySavePassed' : 'liveSession.loyaltySaveFailed', {
-              values: { roll: loyaltyResult.roll, score: loyaltyResult.score },
+            {$_(moraleResult.passed ? 'liveSession.moraleSavePassed' : 'liveSession.moraleSaveFailed', {
+              values: { roll: moraleResult.roll, score: moraleResult.score },
             })}
           </span>
         {/if}

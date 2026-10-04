@@ -69,6 +69,13 @@ data the Dashboard and Live Session screens read from.
   replacement after a death, or an NPC hired mid-adventure.
 - Conditions like `Frightened` or `Hungry & Thirsty` and permanent **Scars** show inline, so you
   don't need to flip to a character sheet mid-scene.
+- **Inventory follows the rulebook.** A mouse has 10 slots — 2 paw, 2 body, 6 pack — and a
+  hireling has 6 (2 paw, 2 body, 2 pack). Armour and two-handed weapons take 2 slots. Carry more
+  than you have room for and the form flags the mouse as **encumbered** (no running,
+  Disadvantage on every save); it warns but never stops you adding items.
+- **Hirelings** have a daily wage, a **WIL** score, and a **Loyal or well-paid** toggle. Their
+  morale saves roll against WIL, with Advantage when that toggle is on — the Roster row shows a
+  **Morale** pill with their WIL and a **Loyal** tag.
 - **Export campaign** / **Import campaign** (top right) save or restore your entire campaign as
   one JSON file — the same controls also live on the Settings screen.
 
@@ -182,7 +189,16 @@ things.
   mouse, and mark it **Defeated** or **Remove** it when it's done. Facing a group? Tap
   **+ Add another** for each extra creature. **Roll Reaction** sets how they greet the party.
 - **Hand items over.** Tap a mouse's **Bag**, pick an item, and **Move** it to another mouse or
-  hireling — post-fight loot or "Wren hands Pip the rope." A full bag gets a warning, never a block.
+  hireling — post-fight loot or "Wren hands Pip the rope." Each row shows the recipient's slots
+  (10 for a mouse, 6 for a hireling); if the item would leave them encumbered you get a warning,
+  never a block.
+- **Hireling morale.** When a hireling is stressed, unpaid or unfed, or ordered into more danger
+  than they signed on for, tap the **Morale** pill on their card (or **Morale** in the docked
+  roller). It rolls a d20 WIL save — 2d20 keep-lowest for a loyal or well-paid hireling — and
+  tells you whether they **stay** or **flee**. **Pay day** lists every hireling's wage, lets you
+  tick off who's been paid, and offers the same morale save for anyone left unpaid.
+- **Reaction rolls** use the rulebook's results — Hostile, Unfriendly, Unsure, Talkative,
+  Helpful — each with the question to answer at the table ("What could win them over?").
 - **Watch card (hex crawl).** Tracks the day and which of the four watches it is. Each tap spends
   one watch: **Stay put**, **Forage** (rolls d3 rations and lets you pick whose bag they go into),
   or move to a neighbouring hex — forest and hills take two watches. Morning and evening watches
@@ -263,12 +279,13 @@ screen is where you back it up.
   desktop, press `/` to open it from anywhere. With nothing typed, it offers shortcuts to every
   screen.
 - **Help tips** — a small `?` sits next to fields and cards where Mausritter rules matter: HP,
-  Pips, hireling Wage and Loyalty, creature Armor, inventory slots and usage, faction disposition
+  Pips, hireling Wage, WIL and the Loyal toggle, creature Armor, inventory slots and usage, faction disposition
   and clocks, hex terrain and encounter weights, the Watch card, reaction rolls, and the Data
   Safety card. Tap it for a one- or two-sentence reminder; tap again, tap elsewhere, or press
   Escape to close it. On a laptop, hovering or tabbing onto the `?` shows it too. For the fuller
   picture, open the **Rules reference** drawer (book icon in the Live Session header and on the
-  Generators screen).
+  Generators screen). It covers saves, damage and death, conditions, inventory and usage dots,
+  reaction rolls, advancement (XP from treasure brought to safety), and hirelings.
 
 ## At the table, on a phone
 

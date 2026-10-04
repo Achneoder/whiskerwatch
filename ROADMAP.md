@@ -113,6 +113,19 @@ Verified: `pnpm typecheck` clean (0 errors), 653/653 unit tests passing, and 50/
 - **Auto-pathfinding/route planning across hexes.** A GM says "we're heading to the Gnawgate" and moves watch-by-watch; an auto-router solves a problem nobody at this table has.
 - **A persisted watch-by-watch travel log.** `day`/`watch`/`restedThisDay`/`currentHexId` are the only new persisted fields — no history of past positions/watches, matching the roadmap's "no bespoke hunger meter" restraint applied to the whole feature.
 
+## Rules-accuracy pass against the SRD (✅ Done)
+
+A check of the in-app help tips against the official Mausritter SRD 2.3.1 (`mausritter.com/srd/mausritter-srd-2.3.1.md`) found several earlier phases had encoded rules from memory that the SRD contradicts. Each was corrected rather than documented as a house rule, per the GM's call. **This supersedes the relevant parts of Phases 8, 10 and 11 above.**
+
+- **Inventory layout.** Mice have 2 paw / 2 body / 6 pack slots (not 4 paws + 6 body); hirelings have 6 slots, 2/2/2 (not 10). `lib/items.ts` now has `MOUSE_LAYOUT`/`HIRELING_LAYOUT` and a three-section `splitSections`; `ItemSlotGrid`, `LiveSessionInventoryModal`, the Live Session bag pill and item hand-off all use the owner's layout. Over capacity is the SRD's **encumbered** (can't run, Disadvantage on all saves), still a non-blocking warning.
+- **Hireling morale replaces the 2d6 loyalty save.** The SRD has hirelings make a **WIL save** (d20 roll-under) or flee when stressed, unpaid/unfed, or asked to do more than they signed on for — with Advantage if especially well-paid or loyal. `Hireling.loyalty: number` became `loyal: boolean` (old scores are dropped on load, no SRD equivalent); `rollLoyaltySave` became `rollMoraleSave(wil, advantage)`. `HirelingForm` gained a WIL stepper and a "Loyal or well-paid" toggle.
+- **The WIL-based hireling limit is removed.** The SRD has no such rule; the Roster warning and the rules drawer's "Retainer limit" section are gone, replaced by a "Hirelings" drawer section with the SRD's morale, wage, slot and XP rules.
+- **Reaction bands** are the SRD's Hostile / Unfriendly / **Unsure** / **Talkative** / Helpful, each with the SRD's GM prompt ("What could win them over?") instead of invented guidance sentences.
+- **Advancement.** XP comes mainly from treasure brought back to safety (1 XP per pip, split across the party); the 1-per-10-pips rate applies only to pips spent selflessly on the community. `spendDowntime`/`DOWNTIME_XP_PER_PIP` were renamed `spendForCommunity`/`COMMUNITY_XP_PER_PIP` to say what they are; the level thresholds were already correct.
+- **Fatal Wounds.** The SRD has no Fatal Wounds table — 0 STR is simply death. The drawer's note, the death-confirmation message and the scars eyebrow (now "Scars") no longer refer to one.
+
+**Not changed — not verifiable from the SRD text:** the six-condition vocabulary and each condition's effect/clear rule (the SRD text references conditions but doesn't define their cards), and the app's Hungry & Thirsty naming. Flagged for a `gm-product-owner` pass with the physical condition cards.
+
 ## Cross-cutting, not a phase
 
 - **Testing.** Every item keeps the established Vitest + Playwright/Cucumber pairing. The save mechanic especially deserves a Gherkin scenario — e.g. "Given Wren has 0 HP and a STR save fails, When the GM applies 3 more damage, Then Wren's STR drops and a Fatal Wounds prompt appears" — since it's a rules-correctness surface, not just UI.

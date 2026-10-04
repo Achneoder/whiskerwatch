@@ -8,7 +8,7 @@ const events: LiveSessionEvent[] = [
   { id: 'e2', kind: 'factionClockChanged', factionId: 'f1', name: 'The Court', from: 3, to: 4, max: 6 },
   { id: 'e3', kind: 'strDrained', name: 'Pip', role: 'party', newStr: 4 },
   { id: 'e4', kind: 'scarGained', name: 'Pip', role: 'party', scarLabel: 'Missing an eye', scarNote: '-1 ranged' },
-  { id: 'e5', kind: 'loyaltyFailed', name: 'Oat' },
+  { id: 'e5', kind: 'moraleFailed', name: 'Oat' },
 ];
 
 describe('SessionRecapReview', () => {
@@ -26,7 +26,7 @@ describe('SessionRecapReview', () => {
     expect(screen.getByText('The Court clock 3/6 → 4/6')).toBeInTheDocument();
     expect(screen.getByText("Pip's STR drained to 4")).toBeInTheDocument();
     expect(screen.getByText("Pip gained the scar 'Missing an eye' — -1 ranged")).toBeInTheDocument();
-    expect(screen.getByText('Oat failed a Loyalty save')).toBeInTheDocument();
+    expect(screen.getByText('Oat failed a morale save')).toBeInTheDocument();
   });
 
   it('pre-checks every event checkbox', () => {
@@ -77,7 +77,7 @@ describe('SessionRecapReview', () => {
         '• The Court clock 3/6 → 4/6',
         "• Pip's STR drained to 4",
         "• Pip gained the scar 'Missing an eye' — -1 ranged",
-        '• Oat failed a Loyalty save',
+        '• Oat failed a morale save',
         '',
       ].join('\n'),
     );

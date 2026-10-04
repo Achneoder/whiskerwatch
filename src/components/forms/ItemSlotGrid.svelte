@@ -5,12 +5,13 @@
   import Stepper from '../ui/Stepper.svelte';
   import Button from '../ui/Button.svelte';
   import {
-    MAX_SLOTS,
-    PAWS_SLOTS,
-    BODY_SLOTS,
+    MOUSE_LAYOUT,
+    capacity,
     usedSlots,
     isOverCapacity,
     splitSections,
+    type InventoryLayout,
+    type InventorySection,
     type Item,
   } from '../../lib/items';
 
@@ -19,16 +20,18 @@
     onadd: (input: Omit<Item, 'id'>) => void;
     onremove: (itemId: string) => void;
     onupdate: (itemId: string, patch: Partial<Omit<Item, 'id'>>) => void;
+    /** Slot layout — defaults to a player mouse's; hirelings pass `HIRELING_LAYOUT`. */
+    layout?: InventoryLayout;
   }
 
-  let { items, onadd, onremove, onupdate }: Props = $props();
+  let { items, onadd, onremove, onupdate, layout = MOUSE_LAYOUT }: Props = $props();
 
   const slotChoices: (1 | 2)[] = [1, 2];
 
   type CellEntry = { type: 'item'; item: Item } | { type: 'empty'; key: string };
 
   type EditingState =
-    | { kind: 'add'; section: 'paws' | 'body'; key: string }
+    | { kind: 'add'; section: InventorySection; key: string }
     | { kind: 'edit'; itemId: string }
     | null;
 
@@ -38,27 +41,32 @@
   let draftChargeTrack = $state(0);
   let draftNotes = $state('');
 
-  function buildCells(sectionItems: Item[], sectionSlots: number, prefix: string): CellEntry[] {
+  function buildCells(sectionItems: Item[], sectionSlots: number, prefix: string, minEmpty: number): CellEntry[] {
     const cells: CellEntry[] = sectionItems.map((item) => ({ type: 'item', item }));
     const used = sectionItems.reduce((total, item) => total + item.slots, 0);
-    // Overburdened is a soft warning, never a block (see items.ts) — so even
-    // a section that's already at or past its nominal budget always keeps at
-    // least one "add" affordance, rather than the grid running out of empty
-    // cells to tap once the GM is over capacity.
-    const emptyCount = Math.max(1, sectionSlots - used);
+    const emptyCount = Math.max(minEmpty, sectionSlots - used);
     for (let i = 0; i < emptyCount; i += 1) {
       cells.push({ type: 'empty', key: `${prefix}-empty-${i}` });
     }
     return cells;
   }
 
-  const sections = $derived(splitSections(items));
-  const pawsCells = $derived(buildCells(sections.paws, PAWS_SLOTS, 'paws'));
-  const bodyCells = $derived(buildCells(sections.body, BODY_SLOTS, 'body'));
+  const split = $derived(splitSections(items, layout));
+  // Encumbered is a soft warning, never a block (see items.ts) — so the pack
+  // always keeps at least one "add" affordance, rather than the grid running
+  // out of empty cells to tap once the GM is over capacity. (New items are
+  // appended and packed in order, so the pack's add cell works for any section.)
+  const sections = $derived(
+    (['paws', 'body', 'pack'] as const).map((id) => ({
+      id,
+      cells: buildCells(split[id], layout[id], id, id === 'pack' ? 1 : 0),
+    })),
+  );
   const used = $derived(usedSlots(items));
-  const overburdened = $derived(isOverCapacity(items));
+  const max = $derived(capacity(layout));
+  const encumbered = $derived(isOverCapacity(items, layout));
 
-  function startAdd(section: 'paws' | 'body', key: string) {
+  function startAdd(section: InventorySection, key: string) {
     editing = { kind: 'add', section, key };
     draftName = '';
     draftSlots = 1;
@@ -160,7 +168,7 @@
   </div>
 {/snippet}
 
-{#snippet emptySlot(section: 'paws' | 'body', key: string)}
+{#snippet emptySlot(section: InventorySection, key: string)}
   <button
     type="button"
     onclick={() => startAdd(section, key)}
@@ -202,50 +210,35 @@
       <HelpTip text={$_('help.inventory')} label={$_('inventory.heading')} />
     </span>
     <span class="font-[family-name:var(--font-mono)] text-[length:var(--text-sm)] text-[var(--text-secondary)]">
-      {$_('inventory.slotsUsed', { values: { used, max: MAX_SLOTS } })}
+      {$_('inventory.slotsUsed', { values: { used, max } })}
     </span>
   </div>
 
-  {#if overburdened}
+  {#if encumbered}
     <div
       class="flex items-start gap-2 rounded-[var(--radius-md)] border border-[var(--warning)] bg-[var(--warning-tint)] px-[var(--sp-4)] py-[var(--sp-3)] text-[length:var(--text-sm)] text-[var(--warning)]"
     >
       <span aria-hidden="true">⚠️</span>
-      <span><b>{$_('inventory.overburdenedTitle')}</b> {$_('inventory.overburdenedMessage')}</span>
+      <span><b>{$_('inventory.encumberedTitle')}</b> {$_('inventory.encumberedMessage')}</span>
     </div>
   {/if}
 
-  <div>
-    <div class="ww-label text-[length:var(--text-caption)] mb-1.5">{$_('inventory.paws')}</div>
-    <div class="grid grid-cols-2 gap-2">
-      {#each pawsCells as cell (cell.type === 'item' ? cell.item.id : cell.key)}
-        {#if editing?.kind === 'edit' && cell.type === 'item' && editing.itemId === cell.item.id}
-          {@render editor()}
-        {:else if editing?.kind === 'add' && cell.type === 'empty' && editing.section === 'paws' && editing.key === cell.key}
-          {@render editor()}
-        {:else if cell.type === 'item'}
-          {@render filledSlot(cell.item)}
-        {:else}
-          {@render emptySlot('paws', cell.key)}
-        {/if}
-      {/each}
+  {#each sections as section (section.id)}
+    <div>
+      <div class="ww-label text-[length:var(--text-caption)] mb-1.5">{$_(`inventory.${section.id}`)}</div>
+      <div class="grid grid-cols-2 {section.id === 'pack' ? 'min-[600px]:grid-cols-3' : ''} gap-2">
+        {#each section.cells as cell (cell.type === 'item' ? cell.item.id : cell.key)}
+          {#if editing?.kind === 'edit' && cell.type === 'item' && editing.itemId === cell.item.id}
+            {@render editor()}
+          {:else if editing?.kind === 'add' && cell.type === 'empty' && editing.section === section.id && editing.key === cell.key}
+            {@render editor()}
+          {:else if cell.type === 'item'}
+            {@render filledSlot(cell.item)}
+          {:else}
+            {@render emptySlot(section.id, cell.key)}
+          {/if}
+        {/each}
+      </div>
     </div>
-  </div>
-
-  <div>
-    <div class="ww-label text-[length:var(--text-caption)] mb-1.5 mt-1">{$_('inventory.body')}</div>
-    <div class="grid grid-cols-2 min-[600px]:grid-cols-3 min-[960px]:grid-cols-4 gap-2">
-      {#each bodyCells as cell (cell.type === 'item' ? cell.item.id : cell.key)}
-        {#if editing?.kind === 'edit' && cell.type === 'item' && editing.itemId === cell.item.id}
-          {@render editor()}
-        {:else if editing?.kind === 'add' && cell.type === 'empty' && editing.section === 'body' && editing.key === cell.key}
-          {@render editor()}
-        {:else if cell.type === 'item'}
-          {@render filledSlot(cell.item)}
-        {:else}
-          {@render emptySlot('body', cell.key)}
-        {/if}
-      {/each}
-    </div>
-  </div>
+  {/each}
 </div>

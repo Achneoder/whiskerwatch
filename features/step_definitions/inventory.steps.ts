@@ -70,8 +70,8 @@ Then("the mouse's inventory should show {string}", async function (this: Whisker
     .waitFor({ state: 'visible' });
 });
 
-Then('the GM should see the Overburdened warning', async function (this: WhiskerwatchWorld) {
-  await this.page.getByText('Overburdened.').waitFor({ state: 'visible' });
+Then('the GM should see the Encumbered warning', async function (this: WhiskerwatchWorld) {
+  await this.page.getByText('Encumbered.').waitFor({ state: 'visible' });
 });
 
 Then('the GM can still add another item to the inventory', async function (this: WhiskerwatchWorld) {
@@ -81,3 +81,16 @@ Then('the GM can still add another item to the inventory', async function (this:
   await saveItemDraft(this.page, 'One more thing');
   await itemEditor(this.page).waitFor({ state: 'hidden' });
 });
+
+Then('the inventory should show {string}', async function (this: WhiskerwatchWorld, text: string) {
+  await this.page.getByRole('dialog').getByText(text, { exact: true }).waitFor({ state: 'visible' });
+});
+
+Then(
+  'the inventory should have sections {string}, {string} and {string}',
+  async function (this: WhiskerwatchWorld, first: string, second: string, third: string) {
+    for (const section of [first, second, third]) {
+      await this.page.getByRole('dialog').getByText(section, { exact: true }).waitFor({ state: 'visible' });
+    }
+  },
+);

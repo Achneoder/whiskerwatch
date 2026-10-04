@@ -48,7 +48,7 @@ export const CONDITIONS: Record<ConditionName, ConditionInfo> = {
   unconscious: {
     label: 'Unconscious',
     tone: 'danger',
-    note: 'Out cold from a Fatal Wound. Cleared by tending or rest, per the Fatal Wounds rules.',
+    note: 'Out cold and unable to act. Cleared by tending or rest.',
   },
 };
 

@@ -12,8 +12,8 @@ import {
   addScar,
   addCondition,
   removeCondition,
-  spendDowntime,
-  DOWNTIME_XP_PER_PIP,
+  spendForCommunity,
+  COMMUNITY_XP_PER_PIP,
   type PartyMember,
 } from './party.svelte';
 
@@ -170,18 +170,18 @@ describe('party store', () => {
     });
   });
 
-  describe('spendDowntime', () => {
+  describe('spendForCommunity', () => {
     it('awards xp proportional to pips spent', () => {
       const id = seedOne({ xp: 0, level: 1 });
-      const result = spendDowntime(id, 100);
+      const result = spendForCommunity(id, 100);
 
-      expect(result?.xpGained).toBe(Math.round(100 * DOWNTIME_XP_PER_PIP));
+      expect(result?.xpGained).toBe(Math.round(100 * COMMUNITY_XP_PER_PIP));
       expect(getParty()[0]?.xp).toBe(result?.xpGained);
     });
 
     it('flags a level-up once the xp threshold is crossed', () => {
       const id = seedOne({ xp: 0, level: 1 });
-      const result = spendDowntime(id, 100000);
+      const result = spendForCommunity(id, 100000);
 
       expect(result?.leveledUp).toBe(true);
       expect(result?.newLevel).toBeGreaterThan(1);
@@ -190,7 +190,7 @@ describe('party store', () => {
 
     it('does not flag a level-up for a small amount of xp', () => {
       const id = seedOne({ xp: 0, level: 1 });
-      const result = spendDowntime(id, 1);
+      const result = spendForCommunity(id, 1);
 
       expect(result?.leveledUp).toBe(false);
       expect(getParty()[0]?.level).toBe(1);
@@ -214,7 +214,7 @@ describe('party store', () => {
       [26000, 8],
     ])('follows the SRD advancement table at %i xp (level %i)', (xp, expectedLevel) => {
       const id = seedOne({ xp, level: 1 });
-      spendDowntime(id, 0);
+      spendForCommunity(id, 0);
       expect(getParty()[0]?.level).toBe(expectedLevel);
     });
   });

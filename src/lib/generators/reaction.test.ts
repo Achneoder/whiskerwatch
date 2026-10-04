@@ -5,7 +5,7 @@ import { rollReaction, bandForTotal, REACTION_GUIDANCE } from './reaction';
  * `rollReaction` rolls via `rollDice(2, 6)`, which draws two independent
  * `1 + Math.floor(Math.random() * 6)` values. Queue two mocked `Math.random`
  * results (one per die) to land on a specific 2d6 pair deterministically —
- * same pattern as `rollLoyaltySave`'s tests in `save.test.ts`.
+ * same pattern as the dice mocks in `save.test.ts`.
  */
 function mockD6Pair(d1: number, d2: number) {
   const spy = vi.spyOn(Math, 'random');
@@ -22,12 +22,12 @@ describe('bandForTotal', () => {
     expect(bandForTotal(total)).toBe('unfriendly');
   });
 
-  it.each([6, 7, 8])('maps %i to neutral', (total) => {
-    expect(bandForTotal(total)).toBe('neutral');
+  it.each([6, 7, 8])('maps %i to unsure', (total) => {
+    expect(bandForTotal(total)).toBe('unsure');
   });
 
-  it.each([9, 10, 11])('maps %i to friendly', (total) => {
-    expect(bandForTotal(total)).toBe('friendly');
+  it.each([9, 10, 11])('maps %i to talkative', (total) => {
+    expect(bandForTotal(total)).toBe('talkative');
   });
 
   it('maps 12 to helpful', () => {
@@ -61,20 +61,20 @@ describe('rollReaction', () => {
     expect(result.guidance).toBe(REACTION_GUIDANCE.unfriendly);
   });
 
-  it('sums dice correctly and reports neutral on a 7', () => {
+  it('sums dice correctly and reports unsure on a 7', () => {
     mockD6Pair(3, 4);
     const result = rollReaction();
 
     expect(result.total).toBe(7);
-    expect(result.band).toBe('neutral');
+    expect(result.band).toBe('unsure');
   });
 
-  it('sums dice correctly and reports friendly on a 10', () => {
+  it('sums dice correctly and reports talkative on a 10', () => {
     mockD6Pair(5, 5);
     const result = rollReaction();
 
     expect(result.total).toBe(10);
-    expect(result.band).toBe('friendly');
+    expect(result.band).toBe('talkative');
   });
 
   it('sums dice correctly and reports helpful on a 12', () => {

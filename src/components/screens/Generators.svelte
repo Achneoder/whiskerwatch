@@ -99,7 +99,7 @@
           maxStr: 10,
           dex: 10,
           wil: 10,
-          loyalty: 7,
+          loyal: false,
           wage: 0,
           status: 'active',
           conditions: [],

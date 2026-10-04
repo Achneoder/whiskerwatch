@@ -44,7 +44,7 @@ function hireling(overrides: Partial<Hireling> = {}): Hireling {
     maxStr: 10,
     dex: 10,
     wil: 10,
-    loyalty: 4,
+    loyal: false,
     wage: 5,
     notes: '',
     status: 'active',
@@ -57,12 +57,6 @@ function hireling(overrides: Partial<Hireling> = {}): Hireling {
 
 function mockD20Roll(result: number) {
   vi.spyOn(Math, 'random').mockReturnValue((result - 1) / 20 + 0.0001);
-}
-
-function mockD6Pair(d1: number, d2: number) {
-  const spy = vi.spyOn(Math, 'random');
-  spy.mockReturnValueOnce((d1 - 1) / 6 + 0.0001);
-  spy.mockReturnValueOnce((d2 - 1) / 6 + 0.0001);
 }
 
 /**
@@ -371,7 +365,7 @@ describe('LiveSession', () => {
       await fireEvent.click(within(dialog).getByRole('button', { name: 'Move Torch' }));
 
       const pipRow = within(dialog).getByRole('button', { name: /Pip/ });
-      expect(pipRow).toHaveTextContent('will be overburdened');
+      expect(pipRow).toHaveTextContent('will be encumbered');
       await fireEvent.click(pipRow);
 
       expect(getParty().find((m) => m.id === 'p2')?.items).toHaveLength(11);
@@ -397,44 +391,42 @@ describe('LiveSession', () => {
     });
   });
 
-  it('rolls a loyalty save from a hireling\'s card and shows a pass/fail result inline', async () => {
+  it('rolls a morale (WIL) save from a hireling\'s card and shows a pass/fail result inline', async () => {
     seed();
-    mockD6Pair(1, 2); // total 3, well under Oat's loyalty of 4
+    mockD20Roll(3); // under Oat's WIL of 10
     render(LiveSession, { props: {} });
 
-    await fireEvent.click(screen.getByRole('button', { name: /roll a loyalty save for oat, loyalty 4/i }));
+    await fireEvent.click(screen.getByRole('button', { name: /roll a morale save for oat, wil 10/i }));
 
-    expect(screen.getByText(/Loyalty save: 3 vs 4 — Passed/)).toBeInTheDocument();
+    expect(screen.getByText(/Morale save: 3 vs WIL 10 — Stays/)).toBeInTheDocument();
   });
 
-  it('does not show a loyalty pill on a party mouse\'s card', () => {
+  it('does not show a morale pill on a party mouse\'s card', () => {
     seed();
     render(LiveSession, { props: {} });
 
     const pipCard = screen.getByTestId('mouse-card-Pip');
-    expect(within(pipCard).queryByText('Loyalty')).not.toBeInTheDocument();
+    expect(within(pipCard).queryByText('Morale')).not.toBeInTheDocument();
   });
 
-  it('rolls a 2d6 loyalty save from the SaveDock\'s LOY button, only shown for hirelings', async () => {
+  it('rolls a d20 morale save from the SaveDock\'s Morale button, only shown for hirelings', async () => {
     seed();
-    mockD6Pair(1, 1); // total 2, well under Oat's loyalty of 4
+    mockD20Roll(2); // under Oat's WIL of 10
     render(LiveSession, { props: {} });
 
-    expect(screen.queryByRole('button', { name: /^LOY/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /^Morale/ })).not.toBeInTheDocument();
 
     await fireEvent.change(screen.getByRole('combobox'), { target: { value: 'h1' } });
 
-    expect(screen.getByRole('button', { name: /^LOY 4/ })).toBeInTheDocument();
-    await fireEvent.click(screen.getByRole('button', { name: /^LOY 4/ }));
+    await fireEvent.click(screen.getByRole('button', { name: /^Morale 10$/ }));
     await fireEvent.click(screen.getByRole('button', { name: /roll save/i }));
 
     expect(screen.getByText('Success')).toBeInTheDocument();
-    expect(screen.getByText('2d6')).toBeInTheDocument();
   });
 
-  it('opens Pay Day, marks a hireling paid, and offers an inline loyalty check for an unpaid one', async () => {
+  it('opens Pay Day, marks a hireling paid, and offers an inline morale save for an unpaid one', async () => {
     seed();
-    mockD6Pair(6, 6); // total 12, over Oat's loyalty of 4 — a failed save
+    mockD20Roll(15); // over Oat's WIL of 10 — a failed save
     render(LiveSession, { props: {} });
 
     await fireEvent.click(screen.getByRole('button', { name: /pay day/i }));
@@ -444,8 +436,8 @@ describe('LiveSession', () => {
     expect(within(dialog).getByText('5p')).toBeInTheDocument();
     expect(within(dialog).getByText('Unpaid')).toBeInTheDocument();
 
-    await fireEvent.click(within(dialog).getByRole('button', { name: /roll loyalty save/i }));
-    expect(within(dialog).getByText(/Loyalty save: 12 vs 4 — Failed/)).toBeInTheDocument();
+    await fireEvent.click(within(dialog).getByRole('button', { name: /roll morale save/i }));
+    expect(within(dialog).getByText(/Morale save: 15 vs WIL 10 — Flees/)).toBeInTheDocument();
 
     await fireEvent.click(within(dialog).getByText('Unpaid'));
     expect(within(dialog).getByText('Paid')).toBeInTheDocument();
@@ -565,7 +557,7 @@ describe('LiveSession', () => {
     replaceSessions([]);
     replaceHexNodes([hexNode({ encounters: [{ bestiaryId: 'b1', weight: 1 }] })]);
     replaceBestiary([bestiaryEntry()]);
-    mockEncounterPickThenReaction(3, 4); // reaction total 7 — neutral
+    mockEncounterPickThenReaction(3, 4); // reaction total 7 — unsure
     render(LiveSession, { props: {} });
 
     expect(screen.getByText('The Gnawgate')).toBeInTheDocument();
@@ -576,8 +568,8 @@ describe('LiveSession', () => {
 
     await fireEvent.click(screen.getByRole('button', { name: 'Roll Reaction' }));
 
-    expect(screen.getByText('Neutral')).toBeInTheDocument();
-    expect(screen.getByText('Uncertain, will act to preserve itself.')).toBeInTheDocument();
+    expect(screen.getByText('Unsure')).toBeInTheDocument();
+    expect(screen.getByText('What could win them over?')).toBeInTheDocument();
   });
 
   it('clears a previous reaction roll when a new encounter is rolled', async () => {

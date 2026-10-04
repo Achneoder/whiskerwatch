@@ -8,12 +8,12 @@
 
   let { open, onclose }: Props = $props();
 
-  type SectionId = 'saves' | 'damage' | 'conditions' | 'inventory' | 'reaction' | 'advancement' | 'retainers';
+  type SectionId = 'saves' | 'damage' | 'conditions' | 'inventory' | 'reaction' | 'advancement' | 'hirelings';
 
-  const sectionIds: SectionId[] = ['saves', 'damage', 'conditions', 'inventory', 'reaction', 'advancement', 'retainers'];
+  const sectionIds: SectionId[] = ['saves', 'damage', 'conditions', 'inventory', 'reaction', 'advancement', 'hirelings'];
 
   const conditionIds = ['exhausted', 'frightened', 'hungryThirsty', 'injured', 'incapacitated', 'unconscious'] as const;
-  const reactionBandIds = ['hostile', 'unfriendly', 'neutral', 'friendly', 'helpful'] as const;
+  const reactionBandIds = ['hostile', 'unfriendly', 'unsure', 'talkative', 'helpful'] as const;
 
   // Plain (non-reactive) DOM ref bag — scrollIntoView is imperative, so these
   // don't need to be part of the reactivity graph like $state would.
@@ -127,6 +127,7 @@
         {$_('rulesDrawer.inventory.heading')}
       </h3>
       <p class="text-[length:var(--text-body)] text-[var(--text-secondary)]">{$_('rulesDrawer.inventory.body')}</p>
+      <p class="text-[length:var(--text-body)] text-[var(--text-secondary)] mt-2">{$_('rulesDrawer.inventory.usage')}</p>
     </section>
 
     <hr class="border-t border-[var(--border)] my-[var(--sp-4)]" />
@@ -163,12 +164,13 @@
 
     <hr class="border-t border-[var(--border)] my-[var(--sp-4)]" />
 
-    <!-- Retainer limit -->
-    <section bind:this={sectionEls.retainers}>
+    <!-- Hirelings -->
+    <section bind:this={sectionEls.hirelings}>
       <h3 class="font-[family-name:var(--font-display)] font-bold text-[length:var(--text-h3)] text-[var(--accent)] mb-2">
-        {$_('rulesDrawer.retainers.heading')}
+        {$_('rulesDrawer.hirelings.heading')}
       </h3>
-      <p class="text-[length:var(--text-body)] text-[var(--text-secondary)]">{$_('rulesDrawer.retainers.body')}</p>
+      <p class="text-[length:var(--text-body)] text-[var(--text-secondary)]">{$_('rulesDrawer.hirelings.morale')}</p>
+      <p class="text-[length:var(--text-body)] text-[var(--text-secondary)] mt-2">{$_('rulesDrawer.hirelings.body')}</p>
     </section>
   </div>
   {/if}
