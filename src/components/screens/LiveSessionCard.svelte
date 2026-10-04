@@ -6,7 +6,7 @@
   import HpBar from '../ui/HpBar.svelte';
   import Button from '../ui/Button.svelte';
   import HurtHealDrawer from '../ui/HurtHealDrawer.svelte';
-  import { CONDITIONS, type ConditionName } from '../../lib/conditions';
+  import { CONDITIONS, type ConditionName, conditionLabelKey } from '../../lib/conditions';
   import { MAX_SLOTS, usedSlots, type Item } from '../../lib/items';
 
   export interface LiveSessionCardMember {
@@ -150,7 +150,7 @@
   <div class="flex flex-wrap items-center gap-1.5 mt-2">
     {#each member.conditions as cond (cond)}
       <StatusPill tone={CONDITIONS[cond].tone} size="sm" onclick={() => ontogglecondition(cond)}>
-        {CONDITIONS[cond].label}
+        {$_(conditionLabelKey(cond))}
       </StatusPill>
     {/each}
     <Tag onclick={() => ontoggledrawer('condition')}>+ {$_('liveSession.condition')}</Tag>
@@ -191,7 +191,7 @@
       {#each Object.entries(CONDITIONS) as [key, info] (key)}
         {@const name = key as ConditionName}
         <Tag tone={info.tone} solid={member.conditions.includes(name)} onclick={() => ontogglecondition(name)}>
-          {info.label}
+          {$_(conditionLabelKey(name))}
         </Tag>
       {/each}
     </div>

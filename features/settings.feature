@@ -49,3 +49,11 @@ Feature: Settings
     When I navigate to the "Settings" screen
     Then I should see "Reset everything"
     And I should see "Clear all campaign data and start fresh"
+
+  Scenario: Party conditions on the overview follow the chosen language
+    Given I open Whiskerwatch
+    When I navigate to the "Settings" screen
+    And I switch the language to German
+    And I navigate to the "Übersicht" screen
+    Then I should see "Verängstigt"
+    And I should see "Hungrig & Durstig"

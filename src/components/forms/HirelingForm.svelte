@@ -5,7 +5,7 @@
   import HelpTip from '../ui/HelpTip.svelte';
   import Button from '../ui/Button.svelte';
   import ItemSlotGrid from './ItemSlotGrid.svelte';
-  import { CONDITIONS, type ConditionName } from '../../lib/conditions';
+  import { CONDITIONS, type ConditionName, conditionLabelKey } from '../../lib/conditions';
   import { addItem, removeItem, updateItem, HIRELING_LAYOUT, type Item } from '../../lib/items';
   import type { Hireling } from '../../lib/stores/hirelings.svelte';
 
@@ -94,7 +94,7 @@
             checked={conditions.includes(condition)}
             onchange={() => toggleCondition(condition)}
           />
-          {CONDITIONS[condition].label}
+          {$_(conditionLabelKey(condition))}
         </label>
       {/each}
     </div>

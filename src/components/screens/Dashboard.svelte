@@ -32,7 +32,7 @@
   import { getCampaignName, setCampaignName } from '../../lib/stores/campaign.svelte';
   import { getLastBackupAt } from '../../lib/stores/backupTracking.svelte';
   import { exportCampaign } from '../../lib/campaignExport';
-  import { CONDITIONS } from '../../lib/conditions';
+  import { CONDITIONS, conditionLabelKey } from '../../lib/conditions';
   import { daysSince } from '../../lib/date';
 
   interface Props {
@@ -386,7 +386,7 @@
               </div>
               <div class="flex gap-1.5 shrink-0">
                 {#each member.conditions as cond (cond)}
-                  <StatusPill tone={CONDITIONS[cond].tone} size="sm">{CONDITIONS[cond].label}</StatusPill>
+                  <StatusPill tone={CONDITIONS[cond].tone} size="sm">{$_(conditionLabelKey(cond))}</StatusPill>
                 {/each}
               </div>
             </div>

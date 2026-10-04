@@ -52,6 +52,15 @@ export const CONDITIONS: Record<ConditionName, ConditionInfo> = {
   },
 };
 
+/**
+ * i18n key for a condition's display label. The translated labels live with
+ * the rules drawer's condition list, so every surface shows the same wording.
+ */
+export function conditionLabelKey(name: ConditionName): string {
+  const id = name === 'hungry-thirsty' ? 'hungryThirsty' : name;
+  return `rulesDrawer.conditions.list.${id}.label`;
+}
+
 /** A permanent, roster-visible mark from a past Fatal Wound — separate from `conditions`, never auto-cleared. */
 export interface Scar {
   label: string;

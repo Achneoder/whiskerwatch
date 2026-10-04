@@ -33,7 +33,7 @@
     flush as flushHirelings,
     type Hireling,
   } from '../../lib/stores/hirelings.svelte';
-  import { CONDITIONS, type Scar } from '../../lib/conditions';
+  import { CONDITIONS, type Scar, conditionLabelKey } from '../../lib/conditions';
   import { exportCampaign, importCampaign } from '../../lib/campaignExport';
 
   interface Props {
@@ -212,7 +212,7 @@
               <div class="flex-1 min-w-35"><HpBar value={member.hp} max={member.max} label={$_('roster.form.hp')} size="sm" /></div>
               <div class="flex gap-1.5 shrink-0">
                 {#each member.conditions as cond (cond)}
-                  <StatusPill tone={CONDITIONS[cond].tone} size="sm">{CONDITIONS[cond].label}</StatusPill>
+                  <StatusPill tone={CONDITIONS[cond].tone} size="sm">{$_(conditionLabelKey(cond))}</StatusPill>
                 {/each}
               </div>
               <div class="flex gap-1 shrink-0">

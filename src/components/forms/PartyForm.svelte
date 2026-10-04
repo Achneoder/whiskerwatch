@@ -4,7 +4,7 @@
   import Stepper from '../ui/Stepper.svelte';
   import Button from '../ui/Button.svelte';
   import ItemSlotGrid from './ItemSlotGrid.svelte';
-  import { CONDITIONS, type ConditionName } from '../../lib/conditions';
+  import { CONDITIONS, type ConditionName, conditionLabelKey } from '../../lib/conditions';
   import { addItem, removeItem, updateItem, type Item } from '../../lib/items';
   import type { PartyMember } from '../../lib/stores/party.svelte';
 
@@ -79,7 +79,7 @@
             checked={conditions.includes(condition)}
             onchange={() => toggleCondition(condition)}
           />
-          {CONDITIONS[condition].label}
+          {$_(conditionLabelKey(condition))}
         </label>
       {/each}
     </div>
