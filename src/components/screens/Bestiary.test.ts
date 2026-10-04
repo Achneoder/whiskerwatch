@@ -46,4 +46,29 @@ describe('Bestiary', () => {
 
     expect(screen.getByText(/No creatures yet/)).toBeInTheDocument();
   });
+
+  describe('quick-find focus hand-off', () => {
+    it('opens the edit modal for the matching entry and consumes the focus request', () => {
+      replaceBestiary([
+        { id: '1', name: 'Ratling', category: 'Vermin', hd: 2, hp: 4, armor: 1, attacks: [], special: '', notes: '' },
+      ]);
+      const onconsumedfocus = vi.fn();
+      render(Bestiary, { props: { onnavigate: vi.fn(), focusId: '1', onconsumedfocus } });
+
+      expect(screen.getByRole('dialog')).toBeInTheDocument();
+      expect(within(screen.getByRole('dialog')).getByDisplayValue('Ratling')).toBeInTheDocument();
+      expect(onconsumedfocus).toHaveBeenCalledOnce();
+    });
+
+    it('is a quiet no-op when focusId matches no entry', () => {
+      replaceBestiary([
+        { id: '1', name: 'Ratling', category: 'Vermin', hd: 2, hp: 4, armor: 1, attacks: [], special: '', notes: '' },
+      ]);
+      const onconsumedfocus = vi.fn();
+      render(Bestiary, { props: { onnavigate: vi.fn(), focusId: 'missing', onconsumedfocus } });
+
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+      expect(onconsumedfocus).toHaveBeenCalledOnce();
+    });
+  });
 });

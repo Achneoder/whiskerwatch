@@ -559,6 +559,9 @@ describe('LiveSession', () => {
         adventureId: 'adv-1',
       },
     ]);
+    // Phase 15: the encounter card is now keyed off the adventure's
+    // `currentHexId`, not the beat's linked hex — the party is "standing in" hex1.
+    replaceAdventures([{ id: 'adv-1', title: 'The granary raid', description: '', status: 'active', currentHexId: 'hex1' }]);
     replaceSessions([]);
     replaceHexNodes([hexNode({ encounters: [{ bestiaryId: 'b1', weight: 1 }] })]);
     replaceBestiary([bestiaryEntry()]);
@@ -593,6 +596,7 @@ describe('LiveSession', () => {
         adventureId: 'adv-1',
       },
     ]);
+    replaceAdventures([{ id: 'adv-1', title: 'The granary raid', description: '', status: 'active', currentHexId: 'hex1' }]);
     replaceSessions([]);
     replaceHexNodes([hexNode({ encounters: [{ bestiaryId: 'b1', weight: 1 }] })]);
     replaceBestiary([bestiaryEntry()]);
@@ -632,6 +636,7 @@ describe('LiveSession', () => {
           adventureId: 'adv-1',
         },
       ]);
+      replaceAdventures([{ id: 'adv-1', title: 'The granary raid', description: '', status: 'active', currentHexId: 'hex1' }]);
       replaceSessions([]);
       replaceHexNodes([hexNode({ encounters: [{ bestiaryId: 'b1', weight: 1 }] })]);
       replaceBestiary([bestiaryEntry({ hp: 4 })]);
@@ -744,7 +749,9 @@ describe('LiveSession', () => {
       replaceFactions([]);
       replaceAdventures([
         { id: 'adv-1', title: 'The granary raid', description: '', status: 'active' },
-        { id: 'adv-2', title: 'The Gnawing Court', description: '', status: 'active' },
+        // Phase 15: the encounter card is keyed off `currentHexId`, not the
+        // beat's linked hex — adv-2's party is "standing in" hex1.
+        { id: 'adv-2', title: 'The Gnawing Court', description: '', status: 'active', currentHexId: 'hex1' },
       ]);
       replaceBeats([
         { id: 'b1', parentId: null, title: 'Into the tunnels', notes: '', status: 'active', hexNodeId: null, factionIds: [], adventureId: 'adv-1' },

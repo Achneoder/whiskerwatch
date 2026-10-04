@@ -2,6 +2,7 @@
   import { Plus, Pencil, Trash2 } from 'lucide-svelte';
   import { _ } from 'svelte-i18n';
   import AppSidebar, { type NavScreen } from '../layout/AppSidebar.svelte';
+  import type { SearchResult } from '../ui/QuickFind.svelte';
   import Button from '../ui/Button.svelte';
   import Card from '../ui/Card.svelte';
   import Icon from '../ui/Icon.svelte';
@@ -21,14 +22,27 @@
   interface Props {
     onnavigate: (screen: NavScreen) => void;
     onstartsession?: () => void;
+    onselectresult?: (result: SearchResult) => void;
+    /** Set by `App.svelte` when quick-find selects a bestiary entry on this screen — opens its edit modal, then `onconsumedfocus` clears it. */
+    focusId?: string | undefined;
+    onconsumedfocus?: () => void;
   }
 
-  let { onnavigate, onstartsession }: Props = $props();
+  let { onnavigate, onstartsession, onselectresult, focusId, onconsumedfocus }: Props = $props();
 
   const bestiary = getBestiary();
 
   let entryModal = $state<{ mode: 'add' } | { mode: 'edit'; entry: BestiaryEntry } | null>(null);
   let deleteTarget = $state<BestiaryEntry | null>(null);
+
+  // Quick-find hand-off — see the equivalent note in Roster.svelte. A
+  // `focusId` matching no entry is a quiet no-op.
+  $effect(() => {
+    if (!focusId) return;
+    const entry = bestiary.find((e) => e.id === focusId);
+    if (entry) entryModal = { mode: 'edit', entry };
+    onconsumedfocus?.();
+  });
 
   // Awaits `flush()` after the mutation so a GM who refreshes right after
   // saving/deleting never loses the change — see the equivalent note in
@@ -49,7 +63,7 @@
 </script>
 
 <div class="flex flex-col md:flex-row min-h-screen bg-[var(--bg)] text-[var(--text)]">
-  <AppSidebar active="bestiary" {onnavigate} {onstartsession} />
+  <AppSidebar active="bestiary" {onnavigate} {onstartsession} {onselectresult} />
 
   <main class="flex-1 p-[var(--sp-6)] max-w-[var(--content-max)] flex flex-col gap-[var(--sp-5)]">
     <header class="flex items-end justify-between gap-[var(--sp-4)] flex-wrap">

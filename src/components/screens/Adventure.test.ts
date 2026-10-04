@@ -207,4 +207,31 @@ describe('Adventure', () => {
 
     expect(await screen.findByText('The owl hunt (wrapped up)')).toBeInTheDocument();
   });
+
+  describe('quick-find focus hand-off', () => {
+    it('opens the matching beat edit modal and consumes the focus request', () => {
+      replaceAdventures([granaryRaid]);
+      replaceBeats([
+        { id: 'b1', parentId: null, title: 'Find the tunnel', notes: '', status: 'planned', hexNodeId: null, factionIds: [], adventureId: 'adv-1' },
+      ]);
+      const onconsumedfocus = vi.fn();
+      render(Adventure, { props: { onnavigate: vi.fn(), focusId: 'b1', onconsumedfocus } });
+
+      expect(screen.getByRole('dialog')).toBeInTheDocument();
+      expect(within(screen.getByRole('dialog')).getByDisplayValue('Find the tunnel')).toBeInTheDocument();
+      expect(onconsumedfocus).toHaveBeenCalledOnce();
+    });
+
+    it('is a quiet no-op when focusId matches no beat', () => {
+      replaceAdventures([granaryRaid]);
+      replaceBeats([
+        { id: 'b1', parentId: null, title: 'Find the tunnel', notes: '', status: 'planned', hexNodeId: null, factionIds: [], adventureId: 'adv-1' },
+      ]);
+      const onconsumedfocus = vi.fn();
+      render(Adventure, { props: { onnavigate: vi.fn(), focusId: 'missing', onconsumedfocus } });
+
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+      expect(onconsumedfocus).toHaveBeenCalledOnce();
+    });
+  });
 });

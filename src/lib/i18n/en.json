@@ -69,6 +69,16 @@
         "trailing": "about to trigger"
       },
       "allClear": "Nothing urgent — you're ready to run."
+    },
+    "backupCard": {
+      "eyebrow": "Data Safety",
+      "title": "Back up your campaign",
+      "exportNow": "Export now",
+      "neverBackedUp": "You've never exported this campaign",
+      "neverBackedUpTrailing": "{count} sessions logged — a browser wipe would lose all of it.",
+      "staleBackup": "{count} sessions since your last export",
+      "staleBackupTrailing": "Last exported {days} days ago — a quick export keeps this campaign safe.",
+      "allClear": "Backed up — you're covered."
     }
   },
   "liveSession": {
@@ -143,7 +153,38 @@
       "listAriaLabel": "Active adventures"
     },
     "itemMoved": "{item} moved to {to}",
-    "hirelingTag": "Hireling"
+    "hirelingTag": "Hireling",
+    "watch": {
+      "eyebrow": "Watch",
+      "dayWatch": "Day {day} · Watch {watch} ({label})",
+      "labels": {
+        "morning": "Morning",
+        "midday": "Midday",
+        "evening": "Evening",
+        "night": "Night"
+      },
+      "checkTag": "Encounter check",
+      "restedToday": "Rested today",
+      "onboardingPrompt": "Where does the party start?",
+      "startAt": "Start at {name}",
+      "openHexMap": "Open Hex Map",
+      "standingIn": "Standing in: {name} ({terrain})",
+      "prompt": "This watch, the party:",
+      "stay": "Stay put",
+      "forage": "Forage",
+      "notMapped": "{label}: Not mapped yet",
+      "noWaterPath": "{label}: No path across water",
+      "moveCostAria": "{label}·{terrain}, costs 2 watches",
+      "checkHit": "Encounter!",
+      "checkClear": "No encounter",
+      "twoWatchNote": "Two watches pass — one encounter check already made.",
+      "rationsRolled": "{count} Rations rolled",
+      "addTo": "Add to:",
+      "rationsAdded": "{count} Rations added to {name}'s bag",
+      "exhaustedBanner": "No rest yesterday — apply Exhausted to the party?",
+      "applyExhausted": "Apply",
+      "dismissExhausted": "Dismiss"
+    }
   },
   "recap": {
     "eyebrow": "Live · End of session",
@@ -391,6 +432,11 @@
     "deleteMessage": "This clears {name} from the map. This can't be undone — but nothing else in the campaign changes.",
     "legend": "Legend",
     "clear": "Clear hex",
+    "partyIsHere": "Party is here",
+    "partyIsHereAria": "Party is here.",
+    "hereNow": "Here now",
+    "setHere": "Set here",
+    "clearHere": "Clear",
     "beatsTouching": "Beats touching this hex",
     "encountersHere": "Encounters here",
     "controlledBy": "Controlled by",
@@ -639,5 +685,37 @@
       "heading": "Retainer limit",
       "body": "A mouse can command a number of hirelings equal to their WIL score. This is per mouse, summed across the whole party for the party's total hireling capacity."
     }
+  },
+  "search": {
+    "trigger": "Search campaign",
+    "placeholder": "Search mice, beats, hexes…",
+    "back": "Back",
+    "jumpTo": "Jump to:",
+    "noResults": "No matches",
+    "noResultsHint": "Nothing found for \"{query}.\" Check the spelling, or try a shorter word.",
+    "moreResults": "+{n} more — keep typing to narrow it down",
+    "types": {
+      "party": "Mouse",
+      "hireling": "Hireling",
+      "beat": "Beat",
+      "bestiary": "Creature",
+      "faction": "Faction",
+      "hex": "Hex",
+      "session": "Session"
+    },
+    "categories": {
+      "party": "Warband",
+      "hireling": "Hirelings",
+      "beat": "Beats",
+      "bestiary": "Bestiary",
+      "faction": "Factions",
+      "hex": "Hexes",
+      "session": "Sessions"
+    },
+    "status": {
+      "active": "Active",
+      "deceased": "Deceased"
+    },
+    "sessionSecondary": "#{number} · {days} days ago"
   }
 }

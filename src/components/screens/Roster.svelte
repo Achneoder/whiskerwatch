@@ -2,6 +2,7 @@
   import { Plus, Pencil, Trash2, Download, Upload } from 'lucide-svelte';
   import { _ } from 'svelte-i18n';
   import AppSidebar, { type NavScreen } from '../layout/AppSidebar.svelte';
+  import type { SearchResult } from '../ui/QuickFind.svelte';
   import Button from '../ui/Button.svelte';
   import Card from '../ui/Card.svelte';
   import HpBar from '../ui/HpBar.svelte';
@@ -38,9 +39,13 @@
   interface Props {
     onnavigate: (screen: NavScreen) => void;
     onstartsession?: () => void;
+    onselectresult?: (result: SearchResult) => void;
+    /** Set by `App.svelte` when quick-find selects a party member or hireling on this screen — opens the matching edit modal, then `onconsumedfocus` clears it. */
+    focusId?: string | undefined;
+    onconsumedfocus?: () => void;
   }
 
-  let { onnavigate, onstartsession }: Props = $props();
+  let { onnavigate, onstartsession, onselectresult, focusId, onconsumedfocus }: Props = $props();
 
   const party = getParty();
   const hirelings = getHirelings();
@@ -71,6 +76,21 @@
   let scarTarget = $state<{ source: 'party'; member: PartyMember } | { source: 'hireling'; hireling: Hireling } | null>(
     null,
   );
+
+  // Quick-find hand-off: opens the matching party member's or hireling's
+  // edit modal once, then tells `App.svelte` the focus request has been
+  // used. A `focusId` that matches neither list (deleted in another tab
+  // between typing and tapping) is a quiet no-op — see App.svelte's
+  // `selectSearchResult` doc comment for the "dangling id degrades
+  // gracefully" rule this follows.
+  $effect(() => {
+    if (!focusId) return;
+    const member = party.find((m) => m.id === focusId);
+    const hireling = hirelings.find((h) => h.id === focusId);
+    if (member) memberModal = { mode: 'edit', member };
+    else if (hireling) hirelingModal = { mode: 'edit', hireling };
+    onconsumedfocus?.();
+  });
 
   // Each handler below awaits its store's `flush()` right after the mutation:
   // the mutation itself is already applied synchronously (optimistic
@@ -139,7 +159,7 @@
 </script>
 
 <div class="flex flex-col md:flex-row min-h-screen bg-[var(--bg)] text-[var(--text)]">
-  <AppSidebar active="warband" {onnavigate} {onstartsession} />
+  <AppSidebar active="warband" {onnavigate} {onstartsession} {onselectresult} />
 
   <main class="flex-1 p-[var(--sp-6)] max-w-[var(--content-max)] flex flex-col gap-[var(--sp-5)]">
     <header class="flex items-end justify-between gap-[var(--sp-4)] flex-wrap">

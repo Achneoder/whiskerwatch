@@ -7,8 +7,10 @@ import {
   summarizeCampaignExport,
   campaignExportFileName,
   shareCampaign,
+  exportCampaign,
 } from './campaignExport';
 import { getCampaignName, setCampaignName, DEFAULT_CAMPAIGN_NAME } from './stores/campaign.svelte';
+import { getLastBackupAt } from './stores/backupTracking.svelte';
 import { getParty } from './stores/party.svelte';
 import { getHirelings } from './stores/hirelings.svelte';
 import { getAdventures, replaceAdventures } from './stores/adventures.svelte';
@@ -398,6 +400,46 @@ describe('campaignExport', () => {
       expect(getAdventures()[0]?.id).toBe('adv-1');
       expect(getBeats()).toHaveLength(1);
       expect(getBeats()[0]).toMatchObject({ id: 'b1', adventureId: 'adv-1' });
+    });
+  });
+
+  describe('backup tracking', () => {
+    // `backupTracking.svelte.ts`'s in-memory state is a module-level
+    // singleton (reactive `$state`, matching `theme.svelte.ts`'s pattern) —
+    // `localStorage.clear()` in the outer `beforeEach` wipes the persisted
+    // value but not that in-memory cache, so these tests compare
+    // before/after within each case rather than asserting a fresh `null`.
+
+    it('does not mark the campaign as backed up when import fails', async () => {
+      const before = getLastBackupAt();
+      const file = new File(['not json'], 'export.json', { type: 'application/json' });
+
+      await expect(importCampaign(file)).rejects.toThrow();
+
+      expect(getLastBackupAt()).toBe(before);
+    });
+
+    it('marks the campaign as backed up after a successful export', () => {
+      const before = getLastBackupAt();
+
+      exportCampaign();
+
+      const after = getLastBackupAt();
+      expect(after).not.toBeNull();
+      expect(after).not.toBe(before);
+    });
+
+    it('marks the campaign as backed up after a successful import', async () => {
+      const before = getLastBackupAt();
+      const file = new File([JSON.stringify({ party: [], hirelings: [] })], 'export.json', {
+        type: 'application/json',
+      });
+
+      await importCampaign(file);
+
+      const after = getLastBackupAt();
+      expect(after).not.toBeNull();
+      expect(after).not.toBe(before);
     });
   });
 });

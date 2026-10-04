@@ -2,6 +2,7 @@
   import { Plus, Pencil, Trash2 } from 'lucide-svelte';
   import { _ } from 'svelte-i18n';
   import AppSidebar, { type NavScreen } from '../layout/AppSidebar.svelte';
+  import type { SearchResult } from '../ui/QuickFind.svelte';
   import Button from '../ui/Button.svelte';
   import Card from '../ui/Card.svelte';
   import Tag from '../ui/Tag.svelte';
@@ -33,9 +34,21 @@
     draftRecap?: Omit<Session, 'id'> | null;
     /** Tells the parent the recap draft has been handed to the modal, so it can clear its own state and not reopen this on a later visit to Sessions. */
     onconsumeddraft?: () => void;
+    onselectresult?: (result: SearchResult) => void;
+    /** Set by `App.svelte` when quick-find selects a session on this screen — opens its edit modal, then `onconsumedfocus` clears it. */
+    focusId?: string | undefined;
+    onconsumedfocus?: () => void;
   }
 
-  let { onnavigate, onstartsession, draftRecap = null, onconsumeddraft }: Props = $props();
+  let {
+    onnavigate,
+    onstartsession,
+    draftRecap = null,
+    onconsumeddraft,
+    onselectresult,
+    focusId,
+    onconsumedfocus,
+  }: Props = $props();
 
   const sessions = getSessions();
   const adventures = getAdventures();
@@ -72,6 +85,15 @@
     if (draftRecap) onconsumeddraft?.();
   });
 
+  // Quick-find hand-off — see the equivalent note in Roster.svelte. A
+  // `focusId` matching no session (deleted in another tab) is a quiet no-op.
+  $effect(() => {
+    if (!focusId) return;
+    const session = sessions.find((s) => s.id === focusId);
+    if (session) sessionModal = { mode: 'edit', session };
+    onconsumedfocus?.();
+  });
+
   // Awaits `flush()` after the mutation so a GM who refreshes right after
   // saving/deleting never loses the change — see the equivalent note in
   // Roster.svelte.
@@ -91,7 +113,7 @@
 </script>
 
 <div class="flex flex-col md:flex-row min-h-screen bg-[var(--bg)] text-[var(--text)]">
-  <AppSidebar active="sessions" {onnavigate} {onstartsession} />
+  <AppSidebar active="sessions" {onnavigate} {onstartsession} {onselectresult} />
 
   <main class="flex-1 p-[var(--sp-6)] max-w-[var(--content-max)] flex flex-col gap-[var(--sp-5)]">
     <header class="flex items-end justify-between gap-[var(--sp-4)] flex-wrap">

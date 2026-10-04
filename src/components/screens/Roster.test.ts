@@ -322,4 +322,35 @@ describe('Roster', () => {
 
     expect(screen.queryByText(new RegExp(limitWarning))).not.toBeInTheDocument();
   });
+
+  describe('quick-find focus hand-off', () => {
+    it('opens the matching party member edit modal and consumes the focus request', () => {
+      replaceParty([member({ id: 'wren', name: 'Wren' })]);
+      const onconsumedfocus = vi.fn();
+      render(Roster, { props: { onnavigate: vi.fn(), focusId: 'wren', onconsumedfocus } });
+
+      expect(screen.getByRole('dialog')).toBeInTheDocument();
+      expect(within(screen.getByRole('dialog')).getByDisplayValue('Wren')).toBeInTheDocument();
+      expect(onconsumedfocus).toHaveBeenCalledOnce();
+    });
+
+    it('opens the matching hireling edit modal and consumes the focus request', () => {
+      replaceHirelings([hireling({ id: 'oat', name: 'Oat' })]);
+      const onconsumedfocus = vi.fn();
+      render(Roster, { props: { onnavigate: vi.fn(), focusId: 'oat', onconsumedfocus } });
+
+      expect(screen.getByRole('dialog')).toBeInTheDocument();
+      expect(within(screen.getByRole('dialog')).getByDisplayValue('Oat')).toBeInTheDocument();
+      expect(onconsumedfocus).toHaveBeenCalledOnce();
+    });
+
+    it('is a quiet no-op when focusId matches neither a party member nor a hireling', () => {
+      replaceParty([member({ id: 'wren', name: 'Wren' })]);
+      const onconsumedfocus = vi.fn();
+      render(Roster, { props: { onnavigate: vi.fn(), focusId: 'missing', onconsumedfocus } });
+
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+      expect(onconsumedfocus).toHaveBeenCalledOnce();
+    });
+  });
 });

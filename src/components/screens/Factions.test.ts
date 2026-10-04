@@ -70,4 +70,25 @@ describe('Factions', () => {
 
     expect(screen.getByText(/The granary raid/)).toBeInTheDocument();
   });
+
+  describe('quick-find focus hand-off', () => {
+    it('opens the matching faction edit modal and consumes the focus request', () => {
+      replaceFactions([court]);
+      const onconsumedfocus = vi.fn();
+      render(Factions, { props: { onnavigate: vi.fn(), focusId: '1', onconsumedfocus } });
+
+      expect(screen.getByRole('dialog')).toBeInTheDocument();
+      expect(within(screen.getByRole('dialog')).getByDisplayValue('The Court')).toBeInTheDocument();
+      expect(onconsumedfocus).toHaveBeenCalledOnce();
+    });
+
+    it('is a quiet no-op when focusId matches no faction', () => {
+      replaceFactions([court]);
+      const onconsumedfocus = vi.fn();
+      render(Factions, { props: { onnavigate: vi.fn(), focusId: 'missing', onconsumedfocus } });
+
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+      expect(onconsumedfocus).toHaveBeenCalledOnce();
+    });
+  });
 });

@@ -69,6 +69,16 @@
         "trailing": "kurz vor dem Auslösen"
       },
       "allClear": "Nichts Dringendes — ihr seid startklar."
+    },
+    "backupCard": {
+      "eyebrow": "Datensicherheit",
+      "title": "Kampagne sichern",
+      "exportNow": "Jetzt exportieren",
+      "neverBackedUp": "Du hast diese Kampagne noch nie exportiert",
+      "neverBackedUpTrailing": "{count} Sitzungen protokolliert — bei einem Browser-Reset wäre alles verloren.",
+      "staleBackup": "{count} Sitzungen seit deinem letzten Export",
+      "staleBackupTrailing": "Zuletzt vor {days} Tagen exportiert — ein kurzer Export hält diese Kampagne sicher.",
+      "allClear": "Gesichert — alles ist geschützt."
     }
   },
   "liveSession": {
@@ -143,7 +153,38 @@
       "listAriaLabel": "Aktive Abenteuer"
     },
     "itemMoved": "{item} an {to} übergeben",
-    "hirelingTag": "Söldner"
+    "hirelingTag": "Söldner",
+    "watch": {
+      "eyebrow": "Wache",
+      "dayWatch": "Tag {day} · Wache {watch} ({label})",
+      "labels": {
+        "morning": "Morgen",
+        "midday": "Mittag",
+        "evening": "Abend",
+        "night": "Nacht"
+      },
+      "checkTag": "Begegnungsprobe",
+      "restedToday": "Heute gerastet",
+      "onboardingPrompt": "Wo beginnt die Gruppe?",
+      "startAt": "Bei {name} starten",
+      "openHexMap": "Hexkarte öffnen",
+      "standingIn": "Aktueller Ort: {name} ({terrain})",
+      "prompt": "Diese Wache verbringt die Gruppe:",
+      "stay": "Rasten",
+      "forage": "Nahrung suchen",
+      "notMapped": "{label}: Noch nicht kartiert",
+      "noWaterPath": "{label}: Kein Weg über das Wasser",
+      "moveCostAria": "{label}·{terrain}, kostet 2 Wachen",
+      "checkHit": "Begegnung!",
+      "checkClear": "Keine Begegnung",
+      "twoWatchNote": "Zwei Wachen vergehen — eine Begegnungsprobe wurde bereits gewürfelt.",
+      "rationsRolled": "{count} Rationen gewürfelt",
+      "addTo": "Hinzufügen zu:",
+      "rationsAdded": "{count} Rationen zu {name}s Beutel hinzugefügt",
+      "exhaustedBanner": "Gestern nicht gerastet — Erschöpfung auf die Gruppe anwenden?",
+      "applyExhausted": "Anwenden",
+      "dismissExhausted": "Verwerfen"
+    }
   },
   "recap": {
     "eyebrow": "Live · Sitzungsende",
@@ -391,6 +432,11 @@
     "deleteMessage": "Dadurch wird {name} von der Karte entfernt. Das kann nicht rückgängig gemacht werden — aber sonst ändert sich nichts an der Kampagne.",
     "legend": "Legende",
     "clear": "Feld löschen",
+    "partyIsHere": "Die Gruppe ist hier",
+    "partyIsHereAria": "Die Gruppe ist hier.",
+    "hereNow": "Jetzt hier",
+    "setHere": "Hier festlegen",
+    "clearHere": "Entfernen",
     "beatsTouching": "Beats, die dieses Feld betreffen",
     "encountersHere": "Begegnungen hier",
     "controlledBy": "Kontrolliert von",
@@ -639,5 +685,37 @@
       "heading": "Gefolge-Obergrenze",
       "body": "Eine Maus kann so viele Gefolgsmitglieder befehligen, wie ihr WIL-Wert beträgt. Das gilt pro Maus und wird über die ganze Gruppe summiert, um die Gesamtkapazität der Gruppe zu ergeben."
     }
+  },
+  "search": {
+    "trigger": "Kampagne durchsuchen",
+    "placeholder": "Mäuse, Beats, Hexfelder durchsuchen…",
+    "back": "Zurück",
+    "jumpTo": "Springen zu:",
+    "noResults": "Keine Treffer",
+    "noResultsHint": "Nichts gefunden für „{query}“. Prüfe die Schreibweise oder versuche ein kürzeres Wort.",
+    "moreResults": "+{n} weitere — weiter tippen, um einzugrenzen",
+    "types": {
+      "party": "Maus",
+      "hireling": "Söldner",
+      "beat": "Beat",
+      "bestiary": "Kreatur",
+      "faction": "Fraktion",
+      "hex": "Hexfeld",
+      "session": "Sitzung"
+    },
+    "categories": {
+      "party": "Gruppe",
+      "hireling": "Söldner",
+      "beat": "Beats",
+      "bestiary": "Bestiarium",
+      "faction": "Fraktionen",
+      "hex": "Hexfelder",
+      "session": "Sitzungen"
+    },
+    "status": {
+      "active": "Aktiv",
+      "deceased": "Verstorben"
+    },
+    "sessionSecondary": "#{number} · vor {days} Tagen"
   }
 }

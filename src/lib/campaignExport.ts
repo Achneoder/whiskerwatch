@@ -24,6 +24,7 @@ import {
   flush as flushCampaignHistory,
   type CampaignHistoryEntry,
 } from './stores/campaignHistory.svelte';
+import { markBackedUp } from './stores/backupTracking.svelte';
 
 /**
  * v2 added `campaignHistory` (the Timeline ledger). v1 files still import:
@@ -315,6 +316,7 @@ function downloadFile(file: File): void {
   anchor.download = file.name;
   anchor.click();
   URL.revokeObjectURL(url);
+  markBackedUp();
 }
 
 export function exportCampaign(): void {
@@ -413,4 +415,9 @@ export async function applyCampaignImport(data: CampaignExport): Promise<void> {
     flushHexNodes(),
     flushCampaignHistory(),
   ]);
+
+  // Only mark the campaign "backed up" once every store's write above has
+  // actually settled — a failed/interrupted import should never falsely
+  // mark the campaign safe (see backupTracking.svelte.ts's doc comment).
+  markBackedUp();
 }

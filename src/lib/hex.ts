@@ -63,6 +63,22 @@ export function hexKey(q: number, r: number): string {
   return `${q},${r}`;
 }
 
+/**
+ * The 6 axial neighbors of a flat-top hex, in a fixed, stable order (used to
+ * build the Watch card's move-chip row deterministically — the same
+ * neighbor always renders in the same chip position, run to run).
+ */
+export function neighbors(q: number, r: number): Axial[] {
+  return [
+    { q: q + 1, r },
+    { q: q + 1, r: r - 1 },
+    { q, r: r - 1 },
+    { q: q - 1, r },
+    { q: q - 1, r: r + 1 },
+    { q, r: r + 1 },
+  ];
+}
+
 /** Every coordinate in the bounded grid, row-major. */
 export function gridCoords(bounds: GridBounds = GRID_BOUNDS): Axial[] {
   const out: Axial[] = [];

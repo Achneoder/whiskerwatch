@@ -2,6 +2,7 @@
   import { Plus, Pencil, Trash2 } from 'lucide-svelte';
   import { _ } from 'svelte-i18n';
   import AppSidebar, { type NavScreen } from '../layout/AppSidebar.svelte';
+  import type { SearchResult } from '../ui/QuickFind.svelte';
   import Button from '../ui/Button.svelte';
   import Card from '../ui/Card.svelte';
   import Tag from '../ui/Tag.svelte';
@@ -32,9 +33,13 @@
   interface Props {
     onnavigate: (screen: NavScreen) => void;
     onstartsession?: () => void;
+    onselectresult?: (result: SearchResult) => void;
+    /** Set by `App.svelte` when quick-find selects a faction on this screen — opens its edit modal, then `onconsumedfocus` clears it. */
+    focusId?: string | undefined;
+    onconsumedfocus?: () => void;
   }
 
-  let { onnavigate, onstartsession }: Props = $props();
+  let { onnavigate, onstartsession, onselectresult, focusId, onconsumedfocus }: Props = $props();
 
   const factions = getFactions();
   const edges = getFactionEdges();
@@ -43,6 +48,20 @@
   let factionModal = $state<{ mode: 'add' } | { mode: 'edit'; entry: Faction } | null>(null);
   let deleteTarget = $state<Faction | null>(null);
   let selectedId = $state<string | null>(null);
+
+  // Quick-find hand-off — see the equivalent note in Roster.svelte. Also
+  // selects the faction (same highlight the graph/card list already use for
+  // a manually-clicked faction) so it's visually obvious which one search
+  // landed on. A `focusId` matching no faction is a quiet no-op.
+  $effect(() => {
+    if (!focusId) return;
+    const faction = factions.find((f) => f.id === focusId);
+    if (faction) {
+      factionModal = { mode: 'edit', entry: faction };
+      selectedId = faction.id;
+    }
+    onconsumedfocus?.();
+  });
 
   const relationTone: Record<FactionRelationType, 'success' | 'danger' | 'warning'> = {
     ally: 'success',
@@ -84,7 +103,7 @@
 </script>
 
 <div class="flex flex-col md:flex-row min-h-screen bg-[var(--bg)] text-[var(--text)]">
-  <AppSidebar active="factions" {onnavigate} {onstartsession} />
+  <AppSidebar active="factions" {onnavigate} {onstartsession} {onselectresult} />
 
   <main class="flex-1 p-[var(--sp-6)] max-w-[var(--content-max)] flex flex-col gap-[var(--sp-5)]">
     <header class="flex items-end justify-between gap-[var(--sp-4)] flex-wrap">

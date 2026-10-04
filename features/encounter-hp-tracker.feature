@@ -8,6 +8,10 @@ Feature: Live-combat HP tracker for rolled encounters
     Given I open Whiskerwatch
     And I navigate to the "Hex map" screen
     And the GM opens the "Bramblewatch" hex
+    # Phase 15: the encounter card is keyed off the party's actual position,
+    # not just the active beat's linked hex — so the party needs to be
+    # standing at Bramblewatch too, not merely have a beat pointing at it.
+    And the GM places the party here
     And the GM links the "Gnawing Court Ratling" creature to this hex with weight 1
     And the GM saves the hex
     And I navigate to the "Adventure" screen

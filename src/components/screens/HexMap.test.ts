@@ -1,10 +1,11 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/svelte';
+import { render, screen, fireEvent, within } from '@testing-library/svelte';
 import HexMap from './HexMap.svelte';
 import { replaceHexNodes, type HexNode } from '../../lib/stores/hexmap.svelte';
 import { replaceBeats } from '../../lib/stores/beats.svelte';
 import { replaceBestiary, type BestiaryEntry } from '../../lib/stores/bestiary.svelte';
 import { replaceFactions, type Faction } from '../../lib/stores/factions.svelte';
+import { replaceAdventures, getAdventures } from '../../lib/stores/adventures.svelte';
 
 const home: HexNode = {
   id: '1',
@@ -25,6 +26,7 @@ describe('HexMap', () => {
     replaceBeats([]);
     replaceBestiary([]);
     replaceFactions([]);
+    replaceAdventures([]);
   });
 
   it('renders a seeded content hex by its accessible label', () => {
@@ -126,5 +128,99 @@ describe('HexMap', () => {
     expect(screen.getAllByText('The Gnawing Court', { selector: 'span' }).length).toBeGreaterThan(0);
     expect(screen.getAllByText('Contested by', { selector: 'span' }).length).toBeGreaterThan(0);
     expect(screen.getAllByText('The Seed-Keepers', { selector: 'span' }).length).toBeGreaterThan(0);
+  });
+
+  describe('quick-find focus hand-off', () => {
+    it('selects and opens the matching hex detail modal, then consumes the focus request', () => {
+      replaceHexNodes([home]);
+      const onconsumedfocus = vi.fn();
+      render(HexMap, { props: { onnavigate: vi.fn(), focusId: '1', onconsumedfocus } });
+
+      expect(screen.getByDisplayValue('Bramblewatch')).toBeInTheDocument();
+      expect(onconsumedfocus).toHaveBeenCalledOnce();
+    });
+
+    it('is a quiet no-op when focusId matches no hex node', () => {
+      replaceHexNodes([home]);
+      const onconsumedfocus = vi.fn();
+      render(HexMap, { props: { onnavigate: vi.fn(), focusId: 'missing', onconsumedfocus } });
+
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+      expect(onconsumedfocus).toHaveBeenCalledOnce();
+    });
+  });
+
+  describe('"Party is here" placement (Phase 15)', () => {
+    it('shows no row when there is no active adventure', async () => {
+      replaceHexNodes([home]);
+      render(HexMap, { props: { onnavigate: vi.fn() } });
+
+      await fireEvent.click(screen.getByRole('button', { name: /Bramblewatch/ }));
+
+      expect(screen.queryByTestId('party-is-here-row')).not.toBeInTheDocument();
+    });
+
+    it('shows no row when 2+ adventures are active — ambiguous which one to place', async () => {
+      replaceHexNodes([home]);
+      replaceAdventures([
+        { id: 'adv-1', title: 'The granary raid', description: '', status: 'active' },
+        { id: 'adv-2', title: 'The Gnawing Court', description: '', status: 'active' },
+      ]);
+      render(HexMap, { props: { onnavigate: vi.fn() } });
+
+      await fireEvent.click(screen.getByRole('button', { name: /Bramblewatch/ }));
+
+      expect(screen.queryByTestId('party-is-here-row')).not.toBeInTheDocument();
+    });
+
+    it('shows a Set here action when exactly one adventure is active and not yet placed here', async () => {
+      replaceHexNodes([home]);
+      replaceAdventures([{ id: 'adv-1', title: 'The granary raid', description: '', status: 'active' }]);
+      render(HexMap, { props: { onnavigate: vi.fn() } });
+
+      await fireEvent.click(screen.getByRole('button', { name: /Bramblewatch/ }));
+
+      const row = screen.getByTestId('party-is-here-row');
+      expect(within(row).getByRole('button', { name: 'Set here' })).toBeInTheDocument();
+      expect(within(row).queryByText('Here now')).not.toBeInTheDocument();
+    });
+
+    it('sets the single active adventure\'s currentHexId when Set here is tapped', async () => {
+      replaceHexNodes([home]);
+      replaceAdventures([{ id: 'adv-1', title: 'The granary raid', description: '', status: 'active' }]);
+      render(HexMap, { props: { onnavigate: vi.fn() } });
+
+      await fireEvent.click(screen.getByRole('button', { name: /Bramblewatch/ }));
+      await fireEvent.click(within(screen.getByTestId('party-is-here-row')).getByRole('button', { name: 'Set here' }));
+
+      expect(getAdventures().find((a) => a.id === 'adv-1')?.currentHexId).toBe('1');
+    });
+
+    it('shows a Here now tag and Clear action once this hex is the active adventure\'s position', async () => {
+      replaceHexNodes([home]);
+      replaceAdventures([
+        { id: 'adv-1', title: 'The granary raid', description: '', status: 'active', currentHexId: '1' },
+      ]);
+      render(HexMap, { props: { onnavigate: vi.fn() } });
+
+      await fireEvent.click(screen.getByRole('button', { name: /Bramblewatch/ }));
+
+      const row = screen.getByTestId('party-is-here-row');
+      expect(within(row).getByText('Here now')).toBeInTheDocument();
+      expect(within(row).getByRole('button', { name: 'Clear' })).toBeInTheDocument();
+    });
+
+    it('clears the position when Clear is tapped', async () => {
+      replaceHexNodes([home]);
+      replaceAdventures([
+        { id: 'adv-1', title: 'The granary raid', description: '', status: 'active', currentHexId: '1' },
+      ]);
+      render(HexMap, { props: { onnavigate: vi.fn() } });
+
+      await fireEvent.click(screen.getByRole('button', { name: /Bramblewatch/ }));
+      await fireEvent.click(within(screen.getByTestId('party-is-here-row')).getByRole('button', { name: 'Clear' }));
+
+      expect(getAdventures().find((a) => a.id === 'adv-1')?.currentHexId).toBeNull();
+    });
   });
 });

@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { render, within } from '@testing-library/svelte';
+import { render, within, screen, fireEvent } from '@testing-library/svelte';
 import AppSidebar from './AppSidebar.svelte';
 
 // The component renders two parallel navs (a desktop <aside> and a mobile
@@ -60,5 +60,69 @@ describe('AppSidebar', () => {
 
     rerender({ active: 'overview', onnavigate: vi.fn(), onstartsession: vi.fn() });
     expect(getDesktopNav(container).getByRole('button', { name: /start session/i })).toBeInTheDocument();
+  });
+
+  describe('quick-find', () => {
+    it('opens quick-find from the desktop sidebar trigger', async () => {
+      const { container } = render(AppSidebar, { props: { active: 'overview', onnavigate: vi.fn() } });
+
+      await getDesktopNav(container).getByRole('button', { name: 'Search campaign' }).click();
+
+      expect(screen.getByRole('dialog')).toBeInTheDocument();
+    });
+
+    it('opens quick-find from the mobile top bar trigger', async () => {
+      const { container } = render(AppSidebar, { props: { active: 'overview', onnavigate: vi.fn() } });
+      const header = container.querySelector('header');
+      if (!header) throw new Error('Expected a <header> element');
+
+      await within(header).getByRole('button', { name: 'Search campaign' }).click();
+
+      expect(screen.getByRole('dialog')).toBeInTheDocument();
+    });
+
+    it('opens quick-find with the "/" keyboard shortcut', async () => {
+      render(AppSidebar, { props: { active: 'overview', onnavigate: vi.fn() } });
+
+      await fireEvent.keyDown(window, { key: '/' });
+
+      expect(screen.getByRole('dialog')).toBeInTheDocument();
+    });
+
+    it('does not steal "/" from a focused text input', async () => {
+      render(AppSidebar, { props: { active: 'overview', onnavigate: vi.fn() } });
+      const decoyInput = document.createElement('input');
+      document.body.appendChild(decoyInput);
+      decoyInput.focus();
+
+      await fireEvent.keyDown(decoyInput, { key: '/' });
+
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+      document.body.removeChild(decoyInput);
+    });
+
+    it('navigates via a jump-to shortcut selected from quick-find', async () => {
+      const onnavigate = vi.fn();
+      const { container } = render(AppSidebar, { props: { active: 'overview', onnavigate } });
+
+      await getDesktopNav(container).getByRole('button', { name: 'Search campaign' }).click();
+      await fireEvent.click(screen.getByRole('option', { name: 'Factions' }));
+
+      expect(onnavigate).toHaveBeenCalledWith('factions');
+    });
+
+    it('bubbles a quick-find entity selection up through onselectresult', async () => {
+      const { replaceFactions } = await import('../../lib/stores/factions.svelte');
+      replaceFactions([{ id: 'f1', name: 'The Gnawing Court', disposition: 'hostile', clock: 3, of: 6, note: '', tags: [] }]);
+      const onselectresult = vi.fn();
+      const { container } = render(AppSidebar, { props: { active: 'overview', onnavigate: vi.fn(), onselectresult } });
+
+      await getDesktopNav(container).getByRole('button', { name: 'Search campaign' }).click();
+      await fireEvent.input(screen.getByRole('combobox'), { target: { value: 'gnawing' } });
+      await new Promise((resolve) => setTimeout(resolve, 200));
+      await fireEvent.click(screen.getByRole('option', { name: /The Gnawing Court/ }));
+
+      expect(onselectresult).toHaveBeenCalledWith(expect.objectContaining({ id: 'f1', navScreen: 'factions' }));
+    });
   });
 });

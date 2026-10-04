@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { tick } from 'svelte';
   import { _ } from 'svelte-i18n';
   import LiveSessionHeader from './LiveSessionHeader.svelte';
   import FactionClockStrip from './FactionClockStrip.svelte';
@@ -6,12 +7,14 @@
   import LiveSessionInventoryModal from './LiveSessionInventoryModal.svelte';
   import LiveSessionEncounterCard from './LiveSessionEncounterCard.svelte';
   import type { EncounterInstance } from './LiveSessionEncounterInstance.svelte';
+  import LiveSessionWatchCard, { type WatchNeighborOption } from './LiveSessionWatchCard.svelte';
   import SaveDock from './SaveDock.svelte';
   import ConfirmDialog from '../ui/ConfirmDialog.svelte';
   import Tag from '../ui/Tag.svelte';
   import Button from '../ui/Button.svelte';
   import Modal from '../ui/Modal.svelte';
   import Input from '../ui/Input.svelte';
+  import type { NavScreen } from '../layout/AppSidebar.svelte';
   import {
     getParty,
     dealDamage,
@@ -20,6 +23,7 @@
     addCondition,
     removeCondition,
     updateMember,
+    addMemberItem,
     tickMemberItemCharge,
     type PartyMember,
   } from '../../lib/stores/party.svelte';
@@ -31,20 +35,24 @@
     addHirelingCondition,
     removeHirelingCondition,
     updateHireling,
+    addHirelingItem,
     tickHirelingItemCharge,
     type Hireling,
   } from '../../lib/stores/hirelings.svelte';
   import { getFactions, bumpFactionClock, updateFaction } from '../../lib/stores/factions.svelte';
   import { getBeats, type Beat } from '../../lib/stores/beats.svelte';
-  import { getAdventures } from '../../lib/stores/adventures.svelte';
+  import { getAdventures, updateAdventure, advanceAdventureWatch, watchStateOf } from '../../lib/stores/adventures.svelte';
   import { getHexNodes } from '../../lib/stores/hexmap.svelte';
   import { getBestiary, type BestiaryEntry } from '../../lib/stores/bestiary.svelte';
   import type { Item } from '../../lib/items';
   import { getLastSession, getNextSessionNumber, type Session } from '../../lib/stores/sessions.svelte';
   import { rollSave, rollLoyaltySave } from '../../lib/generators/save';
+  import { rollDice } from '../../lib/generators/roll';
   import { generateEncounterFor } from '../../lib/generators/encounters';
   import { rollReaction, type ReactionRollResult } from '../../lib/generators/reaction';
   import { CONDITIONS, type ConditionName } from '../../lib/conditions';
+  import { neighbors as hexNeighbors, hexLabel } from '../../lib/hex';
+  import { travelCost } from '../../lib/watchTime';
   import { getLiveSessionEvents, logEvent, clearLog } from '../../lib/stores/liveSessionLog.svelte';
   import { logDeath } from '../../lib/stores/campaignHistory.svelte';
   import { today } from '../../lib/date';
@@ -55,9 +63,11 @@
     onexit?: () => void;
     /** Bubbles the drafted recap up so the app shell can open Sessions with SessionForm pre-filled. */
     ondraftrecap?: (draft: Omit<Session, 'id'>) => void;
+    /** Threaded through for the Watch card's onboarding "Open Hex Map" fallback, when the active beat has no linked hex to suggest as a starting position. */
+    onnavigate?: (screen: NavScreen) => void;
   }
 
-  let { onexit, ondraftrecap }: Props = $props();
+  let { onexit, ondraftrecap, onnavigate }: Props = $props();
 
   let rulesOpen = $state(false);
 
@@ -147,13 +157,57 @@
       : (activeBeatsAll[0] ?? null),
   );
 
-  // The hex-encounter surface only appears once the active beat is actually
-  // linked to a hex (see Phase 9's beat↔hex linking) — Live Session isn't
-  // the place to pick a hex from scratch, that's what Generators' "any hex"
-  // picker is for.
   const hexNodes = getHexNodes();
   const bestiary = getBestiary();
-  const activeHex = $derived(activeBeat?.hexNodeId ? (hexNodes.find((h) => h.id === activeBeat.hexNodeId) ?? null) : null);
+
+  // Phase 15: the adventure actually backing the active beat — the one
+  // whose hex-crawl clock (day/watch/currentHexId) the Watch card reads and
+  // advances. `activeBeat.adventureId` already resolves to the right
+  // adventure in both the picker and no-picker cases (see `activeBeat`
+  // above), so no extra picker logic is needed here.
+  const currentAdventure = $derived(activeBeat ? (adventures.find((a) => a.id === activeBeat.adventureId) ?? null) : null);
+  const watchState = $derived(currentAdventure ? watchStateOf(currentAdventure) : null);
+
+  // The hex-encounter surface is now keyed off the party's actual position
+  // (`currentAdventure.currentHexId`), not the active beat's linked hex —
+  // the party may have wandered off-beat once position tracking exists (see
+  // docs/design/phase-15-watch-tracker-and-position.md). The beat's linked
+  // hex still matters as `suggestedStartHex` below, for onboarding only.
+  const currentHexId = $derived(currentAdventure?.currentHexId ?? null);
+  const activeHex = $derived(currentHexId ? (hexNodes.find((h) => h.id === currentHexId) ?? null) : null);
+  const suggestedStartHex = $derived(
+    activeBeat?.hexNodeId ? (hexNodes.find((h) => h.id === activeBeat.hexNodeId) ?? null) : null,
+  );
+
+  const neighborOptions = $derived.by((): WatchNeighborOption[] => {
+    if (!activeHex) return [];
+    return hexNeighbors(activeHex.q, activeHex.r).map(({ q, r }) => {
+      const label = hexLabel(q, r);
+      const node = hexNodes.find((h) => h.q === q && h.r === r);
+      if (!node) return { q, r, label, terrain: null, cost: null };
+      if (node.terrain === 'water') return { q, r, label, terrain: node.terrain, cost: null, id: node.id };
+      return { q, r, label, terrain: node.terrain, cost: travelCost(node.terrain), id: node.id };
+    });
+  });
+
+  // All transient, screen-scoped Watch card state — never persisted, reset
+  // whenever the GM switches to a different adventure (see the effect below).
+  let lastCheckResult = $state<{ roll: number; hit: boolean } | null>(null);
+  let exhaustedPending = $state(false);
+  let forageResult = $state<{ rations: number } | null>(null);
+  let showTwoWatchNote = $state(false);
+  // Not reactive — only read/written from event handlers, never rendered
+  // directly, so a plain closure variable is enough (matches `noticeTimer` below).
+  let twoWatchNoteShownEver = false;
+
+  $effect(() => {
+    void currentAdventure?.id;
+    lastCheckResult = null;
+    exhaustedPending = false;
+    forageResult = null;
+    showTwoWatchNote = false;
+  });
+
   let encounterResult = $state<BestiaryEntry | null>(null);
   // Tied to a specific encounter instance — rolling a new encounter always
   // clears whatever reaction was rolled for the previous one.
@@ -190,6 +244,96 @@
 
   function rollHexEncounterReaction() {
     reactionResult = rollReaction();
+  }
+
+  /**
+   * Folds one `advanceAdventureWatch` result into the Watch card's transient
+   * display state, and — on a hit — rolls the hex encounter exactly as the
+   * manual "Roll an encounter" button does, keyed off whatever `activeHex`
+   * resolves to *right now* (i.e. after any move this same tap made).
+   */
+  function applyWatchResult(result: NonNullable<ReturnType<typeof advanceAdventureWatch>>) {
+    lastCheckResult = result.checkRolled ? { roll: result.checkRoll!, hit: result.checkHit } : null;
+    exhaustedPending = result.exhaustedPending;
+    if (result.checkHit) rollHexEncounter();
+  }
+
+  function handleStay() {
+    if (!currentAdventure) return;
+    forageResult = null;
+    showTwoWatchNote = false;
+    const result = advanceAdventureWatch(currentAdventure.id, { stay: true });
+    if (result) applyWatchResult(result);
+  }
+
+  function handleForage() {
+    if (!currentAdventure) return;
+    showTwoWatchNote = false;
+    const result = advanceAdventureWatch(currentAdventure.id, {});
+    if (!result) return;
+    applyWatchResult(result);
+    forageResult = { rations: rollDice(1, 3).total };
+  }
+
+  /**
+   * A hex-changing tap needs the existing "active hex changed" effect (see
+   * below) to clear any stale encounter state for the *old* hex before a
+   * check-hit here rolls a fresh one for the *new* hex — otherwise that
+   * effect would fire after this handler returns and immediately wipe the
+   * freshly-rolled encounter it just set. `tick()` waits for that effect to
+   * run first, so `applyWatchResult`'s roll (if any) always lands last.
+   */
+  async function handleMove(hexId: string) {
+    if (!currentAdventure) return;
+    forageResult = null;
+    const targetHex = hexNodes.find((h) => h.id === hexId);
+    const cost = targetHex ? travelCost(targetHex.terrain) : 1;
+    // An unresolvable hex id (deleted between render and tap) degrades to a
+    // plain one-watch advance with no move — `advanceAdventureWatch` has no
+    // way to resolve a hex id to terrain itself (see its doc comment).
+    const result = advanceAdventureWatch(
+      currentAdventure.id,
+      targetHex ? { move: { hexId, terrain: targetHex.terrain } } : {},
+    );
+    if (!result) return;
+    showTwoWatchNote = cost === 2 && !twoWatchNoteShownEver;
+    if (showTwoWatchNote) twoWatchNoteShownEver = true;
+    await tick();
+    applyWatchResult(result);
+  }
+
+  function handleSetStart(hexId: string) {
+    if (!currentAdventure) return;
+    updateAdventure(currentAdventure.id, { currentHexId: hexId });
+  }
+
+  function handleForageRecipient(recipientId: string) {
+    if (!forageResult) return;
+    const found = sourceAndMemberFor(recipientId);
+    if (!found) return;
+    const { source, member } = found;
+    const rationInput = { name: 'Rations', slots: 1 as const, charges: null, maxCharges: null, notes: '' };
+    for (let i = 0; i < forageResult.rations; i += 1) {
+      if (source === 'party') addMemberItem(recipientId, rationInput);
+      else addHirelingItem(recipientId, rationInput);
+    }
+    announce(
+      'forage:' + recipientId,
+      $_('liveSession.watch.rationsAdded', { values: { count: forageResult.rations, name: member.name } }),
+    );
+    forageResult = null;
+  }
+
+  function handleApplyExhausted() {
+    for (const m of activeParty) {
+      addCondition(m.id, 'exhausted');
+      logEvent({ kind: 'conditionGained', name: m.name, role: 'party', condition: CONDITIONS.exhausted.label });
+    }
+    for (const h of activeHirelings) {
+      addHirelingCondition(h.id, 'exhausted');
+      logEvent({ kind: 'conditionGained', name: h.name, role: 'hireling', condition: CONDITIONS.exhausted.label });
+    }
+    exhaustedPending = false;
   }
 
   function addAnotherInstance() {
@@ -240,6 +384,14 @@
   const fallenParty = $derived(party.filter((m) => m.status === 'deceased'));
   const activeHirelings = $derived(hirelings.filter((h) => h.status === 'active'));
   const fallenHirelings = $derived(hirelings.filter((h) => h.status === 'deceased'));
+
+  // The Watch card's forage recipient row — every active mouse/hireling, no
+  // "sender" to exclude (unlike the item hand-off `recipients` below, which
+  // excludes whoever's bag is open).
+  const forageRecipients = $derived([
+    ...activeParty.map((m) => ({ id: m.id, name: m.name, kind: 'party' as const })),
+    ...activeHirelings.map((h) => ({ id: h.id, name: h.name, kind: 'hireling' as const })),
+  ]);
 
   const topFactions = $derived(
     [...factions]
@@ -636,6 +788,40 @@
       onbump={bumpClock}
       ondismissnotice={dismissNotice}
     />
+
+    {#if currentAdventure && watchState}
+      <LiveSessionWatchCard
+        day={watchState.day}
+        watch={watchState.watch}
+        restedThisDay={watchState.restedThisDay}
+        currentHex={activeHex
+          ? { id: activeHex.id, name: activeHex.name || `Hex ${activeHex.q},${activeHex.r}`, terrain: activeHex.terrain }
+          : null}
+        neighbors={neighborOptions}
+        suggestedStartHex={suggestedStartHex
+          ? {
+              id: suggestedStartHex.id,
+              name: suggestedStartHex.name || `Hex ${suggestedStartHex.q},${suggestedStartHex.r}`,
+              terrain: suggestedStartHex.terrain,
+            }
+          : null}
+        {lastCheckResult}
+        {exhaustedPending}
+        recipients={forageRecipients}
+        {forageResult}
+        {showTwoWatchNote}
+        notice={notice && notice.id.startsWith('forage:') ? { text: notice.text, undo: notice.undo } : null}
+        onstay={handleStay}
+        onforage={handleForage}
+        onmove={handleMove}
+        onsetstart={handleSetStart}
+        onaddforagerecipient={handleForageRecipient}
+        onapplyexhausted={handleApplyExhausted}
+        ondismissexhausted={() => (exhaustedPending = false)}
+        ondismissnotice={dismissNotice}
+        onnavigate={() => onnavigate?.('hexMap')}
+      />
+    {/if}
 
     {#if activeHex}
       <LiveSessionEncounterCard
