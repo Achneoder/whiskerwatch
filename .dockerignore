@@ -20,3 +20,5 @@ docker-compose.yml
 cucumber.mjs
 ROADMAP.md
 CLAUDE.md
+.release-version
+.releaserc.json

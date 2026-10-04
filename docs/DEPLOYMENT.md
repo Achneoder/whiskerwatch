@@ -15,17 +15,21 @@ It also means two things worth saying out loud before you deploy:
 
 ## Option 1: The published container image
 
-Images are published to GitHub Container Registry on every push to `main` and every
-`v*` tag:
+Images are published to GitHub Container Registry for every release. Releases
+are cut automatically by [semantic-release](https://semantic-release.gitbook.io/)
+whenever a push to `main` contains a release-worthy commit (see
+[Releases](#releases)), so every image carries a semantic version:
 
 ```
-ghcr.io/achneoder/whiskerwatch:latest      # tip of main
-ghcr.io/achneoder/whiskerwatch:1.2.3       # released version
-ghcr.io/achneoder/whiskerwatch:sha-abc1234 # exact commit
+ghcr.io/achneoder/whiskerwatch:1.2.3       # exact release (pin this)
+ghcr.io/achneoder/whiskerwatch:1.2         # newest 1.2.x
+ghcr.io/achneoder/whiskerwatch:1           # newest 1.x.y
+ghcr.io/achneoder/whiskerwatch:latest      # newest release
+ghcr.io/achneoder/whiskerwatch:sha-abc1234 # the commit a release was built from
 ```
 
 ```sh
-docker run -d --name whiskerwatch -p 8080:80 ghcr.io/achneoder/whiskerwatch:latest
+docker run -d --name whiskerwatch -p 8080:80 ghcr.io/achneoder/whiskerwatch:1.2.3
 ```
 
 Then open <http://localhost:8080>.
@@ -36,8 +40,10 @@ Or with the `docker-compose.yml` in the repository root:
 docker compose up -d
 ```
 
-**Pin a version for anything real.** `latest` moves whenever `main` does; an
-explicit tag is what makes a deploy reproducible and a rollback possible.
+**Pin a version for anything real.** `latest`, `1` and `1.2` move with every
+release; an explicit `X.Y.Z` tag is what makes a deploy reproducible and a
+rollback possible. The release notes for each version are on the repository's
+GitHub Releases page.
 
 The image is `linux/amd64` only.
 
@@ -122,10 +128,37 @@ docker run --rm -p 8080:80 whiskerwatch
 
 - `.github/workflows/ci.yml` — typecheck, unit tests, production build, and the
   Cucumber/Playwright feature suite. Runs on pushes to `main` and on PRs.
-- `.github/workflows/docker-build.yml` — builds the image, starts it, asserts the
+- `.github/workflows/docker-build.yml` — on a push to `main` with something to
+  release: works out the next version, builds the image, starts it, asserts the
   served response (cache headers, MIME types, SPA fallback, CSP), runs the feature
-  suite **against the running container**, and only then pushes to GHCR.
+  suite **against the running container**, and only then tags the release and
+  pushes to GHCR.
 
 That last point is deliberate. The feature suite in `ci.yml` runs under
 `vite preview`, which knows nothing about the SPA fallback, the MIME table or the
 CSP — so a broken `nginx.conf` would otherwise stay invisible until it was live.
+
+## Releases
+
+Versions come from commit messages, which follow
+[Conventional Commits](https://www.conventionalcommits.org/). On every push to
+`main`, semantic-release looks at the commits since the last `vX.Y.Z` tag:
+
+| Commit | Release |
+| --- | --- |
+| `fix: ...`, `perf: ...` | patch — 1.2.3 → 1.2.4 |
+| `feat: ...` | minor — 1.2.3 → 1.3.0 |
+| `feat!: ...` or a `BREAKING CHANGE:` footer | major — 1.2.3 → 2.0.0 |
+| `docs:`, `chore:`, `test:`, `refactor:`, `ci:`, ... | no release, no image |
+
+A release tags the commit, publishes a GitHub Release with generated notes and
+pushes the image. The tag is only created after the image has passed its tests,
+and the image is only pushed once the tag exists, so a version never exists
+without its image or the other way round.
+
+Configuration lives in [`.releaserc.json`](../.releaserc.json). The `version` in
+`package.json` is not updated; the git tags are the source of truth.
+
+To rebuild an existing release (e.g. to pick up a patched nginx base image), run
+the workflow by hand from its tag (`v1.2.3`) in the Actions tab. That re-pushes
+`1.2.3` and `sha-<short>` but leaves `latest`, `1` and `1.2` alone.

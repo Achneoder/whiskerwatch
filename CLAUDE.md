@@ -55,6 +55,10 @@ Whiskerwatch gets used at a physical table — often on a phone or tablet balanc
 - `pnpm test` / `pnpm test:run` — unit tests (watch / single run)
 - `pnpm coverage` — unit test coverage
 
+## Commits & releases
+
+Commit messages follow Conventional Commits (`feat:`, `fix:`, `docs:`, `chore:`, …) — they are not just style: semantic-release reads them on every push to `main` to decide the next version and whether a Docker image is published (`feat` → minor, `fix`/`perf` → patch, `!`/`BREAKING CHANGE:` → major, anything else → no release). See `docs/DEPLOYMENT.md#releases`.
+
 ## Subagents
 
 This project has three specialized subagents (`.claude/agents/`) — prefer delegating to the right one instead of doing all the work in the main thread:

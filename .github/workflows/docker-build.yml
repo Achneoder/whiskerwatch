@@ -1,39 +1,41 @@
-name: Build & Push Docker Image
+name: Release & Docker Image
 
-# Publishes ghcr.io/achneoder/whiskerwatch.
+# Publishes ghcr.io/achneoder/whiskerwatch, versioned by semantic-release.
 #
-# Tagging:
-#   push to main   → latest, sha-<short>
-#   push of v1.2.3 → 1.2.3, latest, sha-<short>
-#   manual         → whatever version you type, plus sha-<short>
+# Every image carries a semantic version. On a push to main, semantic-release
+# reads the Conventional Commit messages since the last release and works out
+# the next version. A release-worthy push (feat, fix, perf, or a breaking
+# change) then:
+#
+#   1. builds the image and tests it while running,
+#   2. tags the commit vX.Y.Z and publishes a GitHub Release with notes,
+#   3. pushes the image as X.Y.Z, X.Y, X, latest and sha-<short>.
+#
+# A push with nothing to release (docs, chore, test, ...) builds nothing. The
+# version is tagged only after the image has passed its tests, so a release
+# never exists without a working image, and the image is pushed only once the
+# tag exists, so an image never names a version that was not released.
+#
+# Re-running a failed run is safe: a commit that already carries a vX.Y.Z tag
+# reuses that version instead of computing a new one. Running the workflow by
+# hand on a tag (e.g. v1.2.3) rebuilds and re-pushes that exact version; only a
+# build of main moves the floating X.Y, X and latest tags.
 #
 # Deployments always pin an explicit version (never `latest`) — see
 # docs/DEPLOYMENT.md.
 #
-# The image is built once, tested while running, and only then pushed. A broken
-# nginx config is otherwise invisible until it is live: the unit and feature
-# suites in ci.yml exercise the app under `vite preview`, which knows nothing
-# about the SPA fallback, MIME types or the Content-Security-Policy that this
-# image adds.
+# The unit and feature suites in ci.yml exercise the app under `vite preview`,
+# which knows nothing about the SPA fallback, MIME types or the
+# Content-Security-Policy that this image adds. That is why the image itself is
+# tested here before anything is published.
 
 on:
   push:
     branches: [main]
-    tags: ['v*']
   workflow_dispatch:
-    inputs:
-      version:
-        description: Version tag to publish (e.g. 1.2.3)
-        required: true
-        type: string
-      ref:
-        description: Git ref to build from (branch, tag or SHA)
-        required: false
-        default: main
-        type: string
 
 concurrency:
-  group: docker-${{ github.ref }}
+  group: release-${{ github.ref }}
   cancel-in-progress: false
 
 env:
@@ -42,36 +44,89 @@ env:
   LOCAL_TAG: whiskerwatch:candidate
 
 jobs:
-  build:
-    name: Build, verify and push
+  version:
+    name: Determine version
     runs-on: ubuntu-latest
     permissions:
-      contents: read
+      # semantic-release checks it could push the tag, even in a dry run.
+      contents: write
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      already-released: ${{ steps.version.outputs.already-released }}
+
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          # semantic-release needs the full history and every tag.
+          fetch-depth: 0
+
+      - uses: pnpm/action-setup@v6
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      # The dry run writes the next version to .release-version via the
+      # verifyReleaseCmd in .releaserc.json; no file means nothing to release.
+      - name: Compute version
+        id: version
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          if tag=$(git describe --tags --exact-match --match 'v[0-9]*' HEAD 2>/dev/null); then
+            echo "HEAD is already released as $tag."
+            echo "version=${tag#v}" >> "$GITHUB_OUTPUT"
+            echo "already-released=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          pnpm exec semantic-release --dry-run
+          if [ -s .release-version ]; then
+            version=$(cat .release-version)
+            echo "Next version: $version"
+            echo "version=$version" >> "$GITHUB_OUTPUT"
+          else
+            echo "No release-worthy commits since the last release; nothing to build."
+          fi
+          echo "already-released=false" >> "$GITHUB_OUTPUT"
+
+  build:
+    name: Build, verify, release and push
+    needs: version
+    if: needs.version.outputs.version != ''
+    runs-on: ubuntu-latest
+    permissions:
+      # contents: tag + GitHub Release. issues / pull-requests: semantic-release
+      # comments on and labels what each release shipped.
+      contents: write
+      issues: write
+      pull-requests: write
       packages: write
 
     steps:
       - uses: actions/checkout@v7
         with:
-          ref: ${{ github.event.inputs.ref || github.ref }}
+          fetch-depth: 0
 
       - name: Compute image tags
         id: tags
+        env:
+          VERSION: ${{ needs.version.outputs.version }}
         run: |
           set -euo pipefail
           SHORT_SHA=$(git rev-parse --short HEAD)
+          TAGS="$VERSION sha-$SHORT_SHA"
 
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            VERSION="${{ github.event.inputs.version }}"
-            TAGS="$VERSION sha-$SHORT_SHA"
-          elif [ "${{ github.ref_type }}" = "tag" ]; then
-            # Strip the leading v from the git tag: v1.2.3 → 1.2.3
-            VERSION="${GITHUB_REF_NAME#v}"
-            TAGS="$VERSION latest sha-$SHORT_SHA"
-          else
-            # Stamped version deliberately equals a tag that is actually
-            # pullable, so /version.txt always names something deployable.
-            VERSION="sha-$SHORT_SHA"
-            TAGS="latest sha-$SHORT_SHA"
+          # Floating tags follow main only, so rebuilding an old release by
+          # hand never drags `latest` or `1` back to it.
+          if [ "$GITHUB_REF" = "refs/heads/main" ]; then
+            MAJOR=${VERSION%%.*}
+            MINOR=${VERSION#*.}; MINOR=${MINOR%%.*}
+            TAGS="$TAGS $MAJOR.$MINOR $MAJOR latest"
           fi
 
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
@@ -185,6 +240,23 @@ jobs:
       - name: Stop the container
         if: always()
         run: docker rm -f candidate || true
+
+      # Only now — with a tested image in hand — does the version become real.
+      - name: Publish the release
+        if: needs.version.outputs.already-released != 'true'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: pnpm exec semantic-release
+
+      # semantic-release exits successfully without releasing when main moved
+      # on during this run (a newer push is then queued behind this one). Never
+      # push an image for a version that has no tag.
+      - name: Confirm the release tag exists
+        env:
+          VERSION: ${{ needs.version.outputs.version }}
+        run: |
+          git ls-remote --exit-code --tags origin "refs/tags/v$VERSION" >/dev/null \
+            || { echo "::error::v$VERSION was not released; not pushing an image for it."; exit 1; }
 
       - name: Log in to GHCR
         uses: docker/login-action@v4
