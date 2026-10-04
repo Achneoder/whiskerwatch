@@ -2,9 +2,11 @@ import { mount, unmount } from 'svelte';
 import App from './App.svelte';
 import BootLoading from './components/ui/BootLoading.svelte';
 import './app.css';
-import './lib/i18n';
+import { locale, type SupportedLocale } from './lib/i18n';
+import { get } from 'svelte/store';
 import { registerServiceWorker } from './lib/pwa';
 import { allStoresReady } from './lib/stores/allStoresReady';
+import { relocalizeDemoCampaign } from './lib/stores/demoLocale';
 
 const target = document.getElementById('app');
 if (!target) throw new Error('Missing #app root element');
@@ -17,6 +19,7 @@ if (!target) throw new Error('Missing #app root element');
 const loading = mount(BootLoading, { target });
 
 const appPromise = allStoresReady.then(() => {
+  relocalizeDemoCampaign((get(locale) ?? 'en') as SupportedLocale);
   unmount(loading);
   const app = mount(App, { target });
   registerServiceWorker();

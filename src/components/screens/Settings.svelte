@@ -9,7 +9,8 @@
   import ConfirmDialog from '../ui/ConfirmDialog.svelte';
   import CampaignImportPreview from './CampaignImportPreview.svelte';
   import { getTheme, setTheme, type Theme } from '../../lib/stores/theme.svelte';
-  import { locale, setLocale, type SupportedLocale } from '../../lib/i18n';
+  import { locale, type SupportedLocale } from '../../lib/i18n';
+  import { changeLanguage } from '../../lib/stores/demoLocale';
   import {
     shareCampaign,
     readCampaignFile,
@@ -54,7 +55,7 @@
   }
 
   function chooseLocale(next: SupportedLocale) {
-    setLocale(next);
+    changeLanguage(next);
   }
 
   async function handleExport() {

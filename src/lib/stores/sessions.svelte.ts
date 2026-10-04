@@ -1,5 +1,6 @@
 import { createPersistedList } from './persistedList.svelte';
 import { logSession } from './campaignHistory.svelte';
+import { DEMO_SESSIONS } from '../demoCampaign';
 
 export interface Session {
   id: string;
@@ -30,8 +31,7 @@ const seedSessions: Session[] = [
     id: crypto.randomUUID(),
     number: 4,
     date: daysAgo(6),
-    title: 'Into the sewers',
-    summary: 'The warband tracked the Gnawing Court’s scouts down into the sewers beneath the granary and found the first tunnel entrance.',
+    ...DEMO_SESSIONS[0]!.en,
   },
 ];
 

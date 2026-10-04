@@ -2,6 +2,7 @@ import { createPersistedList } from './persistedList.svelte';
 import { migrateConditions, type ConditionName, type Scar } from '../conditions';
 import { applyDamage, type DamageOutcome } from '../combat';
 import { addItem, removeItem, updateItem, tickCharge, type Item } from '../items';
+import { DEMO_PARTY } from '../demoCampaign';
 
 export interface PartyMember {
   id: string;
@@ -57,8 +58,7 @@ function levelForXp(xp: number): number {
 const seedParty: PartyMember[] = [
   {
     id: crypto.randomUUID(),
-    name: 'Pip',
-    role: 'Scout',
+    ...DEMO_PARTY[0]!.en,
     hp: 4,
     max: 6,
     str: 10,
@@ -75,8 +75,7 @@ const seedParty: PartyMember[] = [
   },
   {
     id: crypto.randomUUID(),
-    name: 'Wren',
-    role: 'Tinker',
+    ...DEMO_PARTY[1]!.en,
     hp: 2,
     max: 6,
     str: 8,
@@ -93,8 +92,7 @@ const seedParty: PartyMember[] = [
   },
   {
     id: crypto.randomUUID(),
-    name: 'Bram',
-    role: 'Warden',
+    ...DEMO_PARTY[2]!.en,
     hp: 6,
     max: 6,
     str: 13,
@@ -111,8 +109,7 @@ const seedParty: PartyMember[] = [
   },
   {
     id: crypto.randomUUID(),
-    name: 'Sedge',
-    role: 'Sage',
+    ...DEMO_PARTY[3]!.en,
     hp: 3,
     max: 6,
     str: 8,

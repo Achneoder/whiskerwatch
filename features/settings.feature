@@ -57,3 +57,11 @@ Feature: Settings
     And I navigate to the "Übersicht" screen
     Then I should see "Verängstigt"
     And I should see "Hungrig & Durstig"
+
+  Scenario: The demo campaign follows the chosen language
+    Given I open Whiskerwatch
+    When I navigate to the "Settings" screen
+    And I switch the language to German
+    And I navigate to the "Fraktionen" screen
+    Then I should see "Der Nagehof"
+    And I should see "Miliz von Brombeerwacht"

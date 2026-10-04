@@ -1,5 +1,6 @@
 import { createPersistedList } from './persistedList.svelte';
 import { removeBestiaryEntryFromHexNodes } from './hexmap.svelte';
+import { DEMO_BESTIARY } from '../demoCampaign';
 
 export type BestiaryCategory = 'Vermin' | 'Beast' | 'Bird of Prey' | 'Humanoid' | 'Aberration';
 
@@ -25,58 +26,43 @@ const STORAGE_KEY = 'whiskerwatch:bestiary';
 const seedBestiary: BestiaryEntry[] = [
   {
     id: crypto.randomUUID(),
-    name: 'Gnawing Court Ratling',
+    ...DEMO_BESTIARY[0]!.en,
     category: 'Vermin',
     hd: 2,
     hp: 4,
     armor: 1,
-    attacks: [{ name: 'Rusty blade', damage: 'd6' }],
-    special: 'Pack tactics: +1 to hit when two or more ratlings attack the same target.',
-    notes: 'Cowardly alone, bold in numbers.',
   },
   {
     id: crypto.randomUUID(),
-    name: 'Tunnel Widow',
+    ...DEMO_BESTIARY[1]!.en,
     category: 'Beast',
     hd: 3,
     hp: 6,
     armor: 0,
-    attacks: [{ name: 'Venomous bite', damage: 'd6' }],
-    special: 'On a hit, the target must pass a STR save or become Weakened (-1 to STR checks) until they next rest.',
-    notes: 'Waits motionless in web-choked side tunnels.',
   },
   {
     id: crypto.randomUUID(),
-    name: 'Rat Court Enforcer',
+    ...DEMO_BESTIARY[2]!.en,
     category: 'Vermin',
     hd: 4,
     hp: 8,
     armor: 2,
-    attacks: [{ name: 'Cleaver', damage: 'd8' }],
-    special: 'Once per fight, can push a mouse back two squares on a hit.',
-    notes: "Reports directly to the Gnawing Court's leadership.",
   },
   {
     id: crypto.randomUUID(),
-    name: 'Sewer Owl',
+    ...DEMO_BESTIARY[3]!.en,
     category: 'Bird of Prey',
     hd: 3,
     hp: 6,
     armor: 0,
-    attacks: [{ name: 'Talons', damage: 'd6+1' }],
-    special: "Silent flight: the owl's first attack in a fight is a critical hit (double damage) if it went unseen.",
-    notes: 'More interested in tribute than territory — see Owl Bridge Toll.',
   },
   {
     id: crypto.randomUUID(),
-    name: 'The Granary Rot',
+    ...DEMO_BESTIARY[4]!.en,
     category: 'Aberration',
     hd: 5,
     hp: 10,
     armor: 1,
-    attacks: [{ name: 'Rotting slam', damage: 'd6' }],
-    special: 'Spores: anyone ending their turn adjacent must pass a STR save or gain a level of Exhausted.',
-    notes: "Grows larger the longer the Gnawing Court's tunnels go unchecked.",
   },
 ];
 

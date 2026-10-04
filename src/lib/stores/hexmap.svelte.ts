@@ -1,5 +1,6 @@
 import { createPersistedList } from './persistedList.svelte';
 import { clearHexNodeFromBeats } from './beats.svelte';
+import { DEMO_HEX_NODES } from '../demoCampaign';
 
 export type HexTerrain = 'meadow' | 'hedgerow' | 'forest' | 'water' | 'hills' | 'ruins' | 'settlement';
 
@@ -45,8 +46,7 @@ const seedHexNodes: HexNode[] = [
     q: 0,
     r: 0,
     terrain: 'settlement',
-    name: 'Bramblewatch',
-    notes: "Home warren & market on stilts; the Reeve's Granary feeds the valley, but something gnaws the support beams at night.",
+    ...DEMO_HEX_NODES[0]!.en,
     discovered: true,
     encounters: [],
     controlledBy: null,
@@ -57,8 +57,7 @@ const seedHexNodes: HexNode[] = [
     q: 1,
     r: 0,
     terrain: 'ruins',
-    name: 'The Gnawgate',
-    notes: "A collapsed silo hides the Gnawing Court's tunnel entrance; bored Ratling sentries watch in shifts.",
+    ...DEMO_HEX_NODES[1]!.en,
     discovered: false,
     encounters: [],
     controlledBy: null,
@@ -69,8 +68,7 @@ const seedHexNodes: HexNode[] = [
     q: 0,
     r: 1,
     terrain: 'water',
-    name: 'Owl Bridge',
-    notes: 'A single-plank crossing over Millrace Creek; a barn owl roosts in the rafters and demands a toll pip.',
+    ...DEMO_HEX_NODES[2]!.en,
     discovered: true,
     encounters: [],
     controlledBy: null,
@@ -81,8 +79,7 @@ const seedHexNodes: HexNode[] = [
     q: -1,
     r: 0,
     terrain: 'meadow',
-    name: 'Sunwarp Meadow',
-    notes: "The Seed-Keepers' storage burrows hide beneath a fallen log at the meadow's heart.",
+    ...DEMO_HEX_NODES[3]!.en,
     discovered: false,
     encounters: [],
     controlledBy: null,
@@ -105,8 +102,7 @@ const seedHexNodes: HexNode[] = [
     q: 0,
     r: -1,
     terrain: 'forest',
-    name: 'Thistlewood Edge',
-    notes: 'A screened clearing where the Bramblewatch Militia drills, away from prying eyes.',
+    ...DEMO_HEX_NODES[4]!.en,
     discovered: false,
     encounters: [],
     controlledBy: null,
@@ -129,8 +125,7 @@ const seedHexNodes: HexNode[] = [
     q: 2,
     r: 0,
     terrain: 'ruins',
-    name: 'The Drowned Barrow',
-    notes: "A half-sunk mouse-lord's barrow; legend says a cursed hoard still glitters inside — and something guards it.",
+    ...DEMO_HEX_NODES[5]!.en,
     discovered: false,
     encounters: [],
     controlledBy: null,

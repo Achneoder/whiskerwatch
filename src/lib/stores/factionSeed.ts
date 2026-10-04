@@ -1,5 +1,6 @@
 import type { Faction } from './factions.svelte';
 import type { FactionEdge } from './factionEdges.svelte';
+import { DEMO_FACTIONS } from '../demoCampaign';
 
 /**
  * Shared seed for the two faction stores. Faction ids are generated once here
@@ -17,48 +18,38 @@ const militia = crypto.randomUUID();
 export const seedFactions: Faction[] = [
   {
     id: gnawingCourt,
-    name: 'The Gnawing Court',
+    ...DEMO_FACTIONS[0]!.en,
     disposition: 'hostile',
     clock: 3,
     of: 6,
-    note: "Rats tunnelling beneath the granary — when the clock fills they breach the grain cellars and raid Bramblewatch's food stores.",
-    tags: ['Hostile', 'Sewers'],
   },
   {
     id: owlBridge,
-    name: 'Owl Bridge Toll',
+    ...DEMO_FACTIONS[1]!.en,
     disposition: 'neutral',
     clock: 1,
     of: 4,
-    note: 'A barn owl in the old millhouse demands a pip toll to cross Millrace Creek — when it fills she starts snatching mice who cross for free.',
-    tags: ['Neutral', 'Toll'],
   },
   {
     id: seedKeepers,
-    name: 'The Seed-Keepers',
+    ...DEMO_FACTIONS[2]!.en,
     disposition: 'ally',
     clock: 5,
     of: 6,
-    note: 'Field mice hoarding winter stores in the meadow burrows — when it fills, allies get first pick of provisions before the frost.',
-    tags: ['Ally', 'Meadow'],
   },
   {
     id: reevesGuild,
-    name: "Granary Reeve's Guild",
+    ...DEMO_FACTIONS[3]!.en,
     disposition: 'neutral',
     clock: 2,
     of: 6,
-    note: 'The merchant council running the granary, weighing whether to pay the Court "protection" — when it fills they secretly funnel grain to the rats.',
-    tags: ['Neutral', 'Trade'],
   },
   {
     id: militia,
-    name: 'Bramblewatch Militia',
+    ...DEMO_FACTIONS[4]!.en,
     disposition: 'ally',
     clock: 3,
     of: 8,
-    note: "Hedgerow defenders drilling in secret — when it fills they muster to seal the Court's tunnels for good.",
-    tags: ['Ally', 'Defense'],
   },
 ];
 

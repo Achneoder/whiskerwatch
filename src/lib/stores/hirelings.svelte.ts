@@ -2,6 +2,7 @@ import { createPersistedList } from './persistedList.svelte';
 import { migrateConditions, type ConditionName, type Scar } from '../conditions';
 import { applyDamage, type DamageOutcome } from '../combat';
 import { addItem, removeItem, updateItem, tickCharge, type Item } from '../items';
+import { DEMO_HIRELINGS } from '../demoCampaign';
 
 export interface Hireling {
   id: string;
@@ -34,8 +35,7 @@ const STORAGE_KEY = 'whiskerwatch:hirelings';
 const seedHirelings: Hireling[] = [
   {
     id: crypto.randomUUID(),
-    name: 'Oat',
-    role: 'Porter',
+    ...DEMO_HIRELINGS[0]!.en,
     hp: 3,
     max: 3,
     str: 10,
@@ -44,7 +44,6 @@ const seedHirelings: Hireling[] = [
     wil: 10,
     loyal: false,
     wage: 5,
-    notes: 'Carries the spare rope and two rations. Paid 5p/day.',
     status: 'active',
     conditions: [],
     scars: [],

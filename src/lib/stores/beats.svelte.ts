@@ -1,6 +1,7 @@
 import { createPersistedList } from './persistedList.svelte';
 import { logBeatCompleted } from './campaignHistory.svelte';
 import { ready as adventuresReady, getAdventures, replaceAdventures, type Adventure, type AdventureStatus } from './adventures.svelte';
+import { DEMO_BEATS } from '../demoCampaign';
 
 export type BeatStatus = 'planned' | 'active' | 'done';
 
@@ -40,8 +41,7 @@ const seedBeats: Beat[] = [
   {
     id: crypto.randomUUID(),
     parentId: null,
-    title: 'The granary raid',
-    notes: 'The Gnawing Court is tunnelling under Old Miller’s granary. The warband needs to get in, find out how far the tunnels reach, and decide what to do about it.',
+    ...DEMO_BEATS[0]!.en,
     status: 'active',
     hexNodeId: null,
     factionIds: [],

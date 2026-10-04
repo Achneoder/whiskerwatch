@@ -21,7 +21,8 @@
   import Icon from '../ui/Icon.svelte';
   import QuickFind, { type SearchResult } from '../ui/QuickFind.svelte';
   import { getTheme, toggleTheme, initTheme } from '../../lib/stores/theme.svelte';
-  import { locale, setLocale, type SupportedLocale } from '../../lib/i18n';
+  import { locale, type SupportedLocale } from '../../lib/i18n';
+  import { changeLanguage } from '../../lib/stores/demoLocale';
 
   export type NavScreen =
     | 'overview'
@@ -117,7 +118,7 @@
 
   function toggleLocale() {
     const next: SupportedLocale = $locale === 'en' ? 'de' : 'en';
-    setLocale(next);
+    changeLanguage(next);
   }
 </script>
 
