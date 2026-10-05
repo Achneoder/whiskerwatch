@@ -507,6 +507,7 @@
       "eyebrow": "NSC",
       "title": "Zufälliger NSC",
       "roll": "NSC würfeln",
+      "role": "Rolle:",
       "quirk": "Eigenheit:",
       "want": "Will:",
       "saveToRoster": "Zum Kader hinzufügen",

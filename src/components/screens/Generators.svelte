@@ -1,7 +1,7 @@
 <script lang="ts">
   import HelpTip from '../ui/HelpTip.svelte';
   import { Dices, Swords, Package, UserRound, BookOpen } from 'lucide-svelte';
-  import { _ } from 'svelte-i18n';
+  import { _, locale } from 'svelte-i18n';
   import AppSidebar, { type NavScreen } from '../layout/AppSidebar.svelte';
   import type { SearchResult } from '../ui/QuickFind.svelte';
   import Button from '../ui/Button.svelte';
@@ -16,7 +16,14 @@
   import HirelingForm from '../forms/HirelingForm.svelte';
   import BestiaryForm from '../forms/BestiaryForm.svelte';
   import { rollDice, type DiceRollResult } from '../../lib/generators/roll';
-  import { ITEM_TABLE, generateFrom, generateNpc, type GeneratedNpc } from '../../lib/generators/tables';
+  import {
+    ITEM_TABLE,
+    entryAt,
+    rollFrom,
+    rollNpc as rollNpcIndices,
+    resolveNpc,
+    type NpcRoll,
+  } from '../../lib/generators/tables';
   import { generateEncounterFor } from '../../lib/generators/encounters';
   import { rollReaction, type ReactionRollResult } from '../../lib/generators/reaction';
   import { getHexNodes } from '../../lib/stores/hexmap.svelte';
@@ -71,8 +78,12 @@
     reactionResult = rollReaction();
   }
 
-  let item = $state<string | null>(null);
-  let npc = $state<GeneratedNpc | null>(null);
+  // Rolls keep table indices, not text, so a result already on screen
+  // follows a language switch (see `LocalizedTable` in generators/tables.ts).
+  let itemIndex = $state<number | null>(null);
+  const item = $derived(itemIndex === null ? null : entryAt(ITEM_TABLE, itemIndex, $locale));
+  let npcRoll = $state<NpcRoll | null>(null);
+  const npc = $derived(npcRoll ? resolveNpc(npcRoll, $locale) : null);
 
   // Which of the two "save" destinations this rolled NPC has already been
   // committed to — a fresh roll (see rollNpc below) resets both back to
@@ -105,7 +116,7 @@
           conditions: [],
           scars: [],
           items: [],
-          notes: `Quirk: ${npc.quirk}\nWants: ${npc.want}`,
+          notes: `${$_('generators.npc.quirk')} ${npc.quirk}\n${$_('generators.npc.want')} ${npc.want}`,
         }
       : undefined,
   );
@@ -121,7 +132,7 @@
           armor: 0,
           attacks: [],
           special: '',
-          notes: `Role: ${npc.role}\nQuirk: ${npc.quirk}\nWants: ${npc.want}`,
+          notes: `${$_('generators.npc.role')} ${npc.role}\n${$_('generators.npc.quirk')} ${npc.quirk}\n${$_('generators.npc.want')} ${npc.want}`,
         }
       : undefined,
   );
@@ -155,7 +166,7 @@
   }
 
   function rollNpc() {
-    npc = generateNpc();
+    npcRoll = rollNpcIndices();
     npcSaveState = { roster: 'idle', bestiary: 'idle' };
     npcRosterId = null;
     npcBestiaryId = null;
@@ -308,7 +319,7 @@
       <!-- Item -->
       <Card eyebrow={$_('generators.item.eyebrow')} title={$_('generators.item.title')}>
         <div class="flex flex-col gap-[var(--sp-4)]">
-          <Button variant="secondary" onclick={() => (item = generateFrom(ITEM_TABLE))}>
+          <Button variant="secondary" onclick={() => (itemIndex = rollFrom(ITEM_TABLE))}>
             {#snippet icon()}
               <Icon icon={Package} />
             {/snippet}

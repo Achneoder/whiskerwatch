@@ -507,6 +507,7 @@
       "eyebrow": "NPC",
       "title": "Random NPC",
       "roll": "Roll an NPC",
+      "role": "Role:",
       "quirk": "Quirk:",
       "want": "Wants:",
       "saveToRoster": "Save to Roster",

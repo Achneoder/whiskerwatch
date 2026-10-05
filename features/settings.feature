@@ -65,3 +65,12 @@ Feature: Settings
     And I navigate to the "Fraktionen" screen
     Then I should see "Der Nagehof"
     And I should see "Miliz von Brombeerwacht"
+
+  Scenario: Generated NPCs follow the chosen language
+    Given I open Whiskerwatch
+    When I navigate to the "Settings" screen
+    And I switch the language to German
+    And I navigate to the "Generatoren" screen
+    And the GM taps "NSC würfeln"
+    Then I should see "Eigenheit:"
+    And the rolled NPC is one of the German generator NPCs

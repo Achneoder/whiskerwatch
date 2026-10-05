@@ -1,6 +1,9 @@
-import { describe, expect, it, vi, beforeEach } from 'vitest';
+import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
+import { tick } from 'svelte';
 import { render, screen, fireEvent, within } from '@testing-library/svelte';
+import { locale } from 'svelte-i18n';
 import Generators from './Generators.svelte';
+import { NPC_QUIRKS, NPC_ROLES } from '../../lib/generators/tables';
 import { replaceBestiary, getBestiary, type BestiaryEntry } from '../../lib/stores/bestiary.svelte';
 import { replaceHexNodes, type HexNode } from '../../lib/stores/hexmap.svelte';
 import { replaceHirelings, getHirelings } from '../../lib/stores/hirelings.svelte';
@@ -217,5 +220,42 @@ describe('Generators', () => {
 
     expect(screen.getByRole('button', { name: 'Save to Roster' })).toBeEnabled();
     expect(screen.getByRole('button', { name: 'Save to Bestiary' })).toBeEnabled();
+  });
+
+  describe('in German', () => {
+    beforeEach(() => {
+      locale.set('de');
+    });
+
+    afterEach(() => {
+      locale.set('en');
+    });
+
+    it('rolls an NPC in German', async () => {
+      vi.spyOn(Math, 'random').mockReturnValue(0);
+      render(Generators, { props: { onnavigate: vi.fn() } });
+
+      await fireEvent.click(screen.getByRole('button', { name: 'NSC würfeln' }));
+
+      expect(screen.getByTestId('npc-name')).toHaveTextContent('Distel');
+      expect(screen.getByText(NPC_ROLES.de[0]!)).toBeInTheDocument();
+      expect(screen.getByText(NPC_QUIRKS.de[0]!)).toBeInTheDocument();
+      expect(screen.queryByText(NPC_ROLES.en[0]!)).not.toBeInTheDocument();
+      vi.restoreAllMocks();
+    });
+
+    it('re-renders an already rolled NPC when the language changes', async () => {
+      vi.spyOn(Math, 'random').mockReturnValue(0);
+      render(Generators, { props: { onnavigate: vi.fn() } });
+
+      await fireEvent.click(screen.getByRole('button', { name: 'NSC würfeln' }));
+      vi.restoreAllMocks();
+      expect(screen.getByTestId('npc-name')).toHaveTextContent('Distel');
+
+      locale.set('en');
+      await tick();
+
+      expect(screen.getByTestId('npc-name')).toHaveTextContent('Thistle');
+    });
   });
 });
