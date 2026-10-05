@@ -229,7 +229,7 @@
         </p>
       </div>
       <div class="flex gap-[var(--gap-inline)]">
-        <Button variant="ghost" size="sm">
+        <Button variant="ghost" size="sm" onclick={() => onnavigate('generators')}>
           {#snippet icon()}
             <Icon icon={Dice5} />
           {/snippet}

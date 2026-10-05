@@ -22,3 +22,7 @@ Feature: Session prep checklist
     Then I should see "You've never exported this campaign"
     When the GM taps "Export now"
     Then I should see "Backed up — you're covered."
+
+  Scenario: The Roll button on the overview opens the dice roller
+    When the GM taps the "Roll" button on the overview
+    Then I should see "Roll dice"

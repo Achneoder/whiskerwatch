@@ -135,6 +135,15 @@ describe('Dashboard', () => {
     expect(onnavigate).toHaveBeenCalledWith('warband');
   });
 
+  it('opens the Generators screen when the Roll button is clicked', async () => {
+    const onnavigate = vi.fn();
+    render(Dashboard, { props: { onnavigate } });
+
+    await fireEvent.click(screen.getByRole('button', { name: 'Roll' }));
+
+    expect(onnavigate).toHaveBeenCalledWith('generators');
+  });
+
   it('shows the next session number and last session title, and navigates to sessions', async () => {
     replaceSessions([{ id: '1', number: 7, date: '2026-01-01', title: 'Into the deep sewers', summary: '' }]);
     const onnavigate = vi.fn();

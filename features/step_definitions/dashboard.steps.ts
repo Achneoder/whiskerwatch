@@ -18,3 +18,8 @@ Given('the GM logs a session titled {string}', async function (this: Whiskerwatc
 When('the GM taps {string}', async function (this: WhiskerwatchWorld, label: string) {
   await this.page.getByRole('button', { name: label }).click();
 });
+
+// Exact match: a plain substring "Roll" would also hit other buttons.
+When('the GM taps the {string} button on the overview', async function (this: WhiskerwatchWorld, label: string) {
+  await this.page.getByRole('button', { name: label, exact: true }).click();
+});
