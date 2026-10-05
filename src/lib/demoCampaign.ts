@@ -5,6 +5,7 @@ import type { BestiaryEntry } from './stores/bestiary.svelte';
 import type { Faction } from './stores/factions.svelte';
 import type { HexNode } from './stores/hexmap.svelte';
 import type { Beat } from './stores/beats.svelte';
+import type { Adventure } from './stores/adventures.svelte';
 import type { Session } from './stores/sessions.svelte';
 
 /**
@@ -246,6 +247,17 @@ export const DEMO_BEATS: DemoText<Beat, 'title' | 'notes'>[] = [
     },
   },
 ];
+
+/**
+ * The demo adventure isn't seeded directly — it's promoted from the demo's
+ * root beat on first boot (see `migrateLegacyBeatsToAdventures`), which
+ * copies the beat's `title`/`notes` into the adventure's `title`/`description`.
+ * Mirrors `DEMO_BEATS` so that promoted adventure can be relocalized too.
+ */
+export const DEMO_ADVENTURES: DemoText<Adventure, 'title' | 'description'>[] = DEMO_BEATS.map((beat) => ({
+  en: { title: beat.en.title, description: beat.en.notes },
+  de: { title: beat.de.title, description: beat.de.notes },
+}));
 
 export const DEMO_SESSIONS: DemoText<Session, 'title' | 'summary'>[] = [
   {

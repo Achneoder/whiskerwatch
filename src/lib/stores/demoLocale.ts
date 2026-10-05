@@ -1,5 +1,6 @@
 import { setLocale, type SupportedLocale } from '../i18n';
 import {
+  DEMO_ADVENTURES,
   DEMO_BEATS,
   DEMO_BESTIARY,
   DEMO_FACTIONS,
@@ -15,6 +16,7 @@ import { getBestiary, updateBestiaryEntry } from './bestiary.svelte';
 import { getFactions, updateFaction } from './factions.svelte';
 import { getHexNodes, updateHexNode } from './hexmap.svelte';
 import { getBeats, updateBeat } from './beats.svelte';
+import { getAdventures, updateAdventure } from './adventures.svelte';
 import { getSessions, updateSession } from './sessions.svelte';
 
 /**
@@ -28,6 +30,7 @@ export function relocalizeDemoCampaign(locale: SupportedLocale): void {
   relocalizeDemoRecords(getBestiary(), DEMO_BESTIARY, 'name', locale, updateBestiaryEntry);
   relocalizeDemoRecords(getFactions(), DEMO_FACTIONS, 'name', locale, updateFaction);
   relocalizeDemoRecords(getHexNodes(), DEMO_HEX_NODES, 'name', locale, updateHexNode);
+  relocalizeDemoRecords(getAdventures(), DEMO_ADVENTURES, 'title', locale, updateAdventure);
   relocalizeDemoRecords(getBeats(), DEMO_BEATS, 'title', locale, updateBeat);
   relocalizeDemoRecords(getSessions(), DEMO_SESSIONS, 'title', locale, updateSession);
 }

@@ -74,3 +74,11 @@ Feature: Settings
     And the GM taps "NSC würfeln"
     Then I should see "Eigenheit:"
     And the rolled NPC is one of the German generator NPCs
+
+  Scenario: The sample adventure follows the chosen language
+    Given I open Whiskerwatch
+    When I navigate to the "Settings" screen
+    And I switch the language to German
+    And I navigate to the "Abenteuer" screen
+    Then I should see "Der Überfall auf den Kornspeicher"
+    And I should not see "The granary raid"
