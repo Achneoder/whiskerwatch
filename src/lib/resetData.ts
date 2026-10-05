@@ -2,6 +2,7 @@ import { clearList } from './idb';
 
 const CAMPAIGN_KEYS = [
   'whiskerwatch:party',
+  'whiskerwatch:adventures',
   'whiskerwatch:beats',
   'whiskerwatch:hexmap',
   'whiskerwatch:factions',

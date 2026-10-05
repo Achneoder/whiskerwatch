@@ -82,3 +82,10 @@ Feature: Settings
     And I navigate to the "Abenteuer" screen
     Then I should see "Der Überfall auf den Kornspeicher"
     And I should not see "The granary raid"
+
+  Scenario: Resetting the campaign also removes the sample adventure
+    Given I open Whiskerwatch
+    When I navigate to the "Settings" screen
+    And I reset all campaign data
+    And I navigate to the "Adventure" screen
+    Then I should not see "The granary raid"

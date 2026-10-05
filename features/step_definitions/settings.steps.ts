@@ -74,3 +74,13 @@ When('I confirm the import', async function (this: WhiskerwatchWorld) {
   await this.page.getByRole('dialog').getByRole('button', { name: 'Import and replace' }).click();
   await this.page.getByRole('status').filter({ hasText: 'Campaign restored.' }).waitFor();
 });
+
+When('I reset all campaign data', async function (this: WhiskerwatchWorld) {
+  await this.page.getByRole('button', { name: 'Reset everything' }).click();
+  // The reset reloads the page — wait for that, so later steps see the
+  // freshly booted (empty) campaign rather than the one being torn down.
+  await Promise.all([
+    this.page.waitForEvent('load'),
+    this.page.getByRole('dialog').getByRole('button', { name: 'Reset and start over' }).click(),
+  ]);
+});
