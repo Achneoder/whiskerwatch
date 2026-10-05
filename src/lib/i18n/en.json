@@ -564,6 +564,12 @@
       "resetConfirmMessage": "This will permanently delete all your campaign data (parties, adventures, factions, etc.) and can't be undone. Make sure you've exported everything you want to keep.",
       "resetConfirmAction": "Reset and start over",
       "resetDone": "Campaign reset. Start fresh!",
+      "sampleHeading": "Sample campaign",
+      "sampleHint": "Load the Bramblewatch sample campaign to explore the app or demo it to your players. This replaces everything currently in the app.",
+      "sample": "Restore sample campaign",
+      "sampleConfirmTitle": "Replace with the sample campaign?",
+      "sampleConfirmMessage": "This will permanently replace all your campaign data (parties, adventures, factions, etc.) with the sample campaign and can't be undone. Make sure you've exported everything you want to keep.",
+      "sampleConfirmAction": "Replace with sample",
       "exportShared": "Campaign shared. Import it on your other device under Settings.",
       "preview": {
         "label": "What's in this file",

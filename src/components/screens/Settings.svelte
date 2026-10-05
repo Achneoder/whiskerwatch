@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { HardDrive, Sun, Moon, Share2, Upload, RotateCcw } from 'lucide-svelte';
+  import { HardDrive, Sun, Moon, Share2, Upload, RotateCcw, PawPrint } from 'lucide-svelte';
   import { _ } from 'svelte-i18n';
   import AppSidebar, { type NavScreen } from '../layout/AppSidebar.svelte';
   import type { SearchResult } from '../ui/QuickFind.svelte';
@@ -21,7 +21,7 @@
     type ShareOutcome,
   } from '../../lib/campaignExport';
   import { getSessions } from '../../lib/stores/sessions.svelte';
-  import { resetAllCampaignData } from '../../lib/resetData';
+  import { resetAllCampaignData, restoreSampleCampaign } from '../../lib/resetData';
 
   interface Props {
     onnavigate: (screen: NavScreen) => void;
@@ -39,6 +39,7 @@
   const pendingSummary = $derived(pendingImport ? summarizeCampaignExport(pendingImport) : null);
   let fileInput = $state<HTMLInputElement>();
   let pendingReset = $state(false);
+  let pendingSample = $state(false);
 
   const themeOptions: { value: Theme; icon: typeof Sun; key: string }[] = [
     { value: 'light', icon: Sun, key: 'settings.appearance.light' },
@@ -125,6 +126,11 @@
     pendingReset = false;
   }
 
+  async function confirmRestoreSample() {
+    pendingSample = false;
+    await restoreSampleCampaign();
+  }
+
   const segmentBase =
     'flex-1 flex items-center justify-center gap-1.5 min-h-[var(--tap)] px-3 rounded-[var(--radius-pill)] font-semibold text-[length:var(--text-body)] cursor-pointer transition-[background,color] duration-[calc(var(--dur-fast)*1ms)] ease-[var(--ease)]';
   const segmentActive = 'bg-[var(--surface-raised)] text-[var(--accent)] shadow-[var(--shadow-sm)]';
@@ -197,7 +203,7 @@
         <p class="text-[length:var(--text-caption)] text-[var(--text-muted)]">{$_('settings.data.footer')}</p>
       {/snippet}
       <p class="text-[length:var(--text-sm)] text-[var(--text-secondary)]">{$_('settings.data.intro')}</p>
-      <div class="mt-[var(--sp-4)] grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-[var(--sp-4)]">
+      <div class="mt-[var(--sp-4)] grid grid-cols-1 sm:grid-cols-2 gap-[var(--sp-4)]">
         <div class="border border-[var(--border)] rounded-[var(--radius-md)] p-[var(--sp-4)] flex flex-col gap-[var(--sp-2)]">
           <div class="font-bold flex items-center gap-1.5"><Icon icon={Share2} />{$_('settings.data.exportHeading')}</div>
           <p class="text-[length:var(--text-sm)] text-[var(--text-muted)] flex-1">{$_('settings.data.exportHint')}</p>
@@ -250,6 +256,17 @@
             {$_('settings.data.reset')}
           </Button>
         </div>
+
+        <div class="border border-[var(--border)] rounded-[var(--radius-md)] p-[var(--sp-4)] flex flex-col gap-[var(--sp-2)]">
+          <div class="font-bold flex items-center gap-1.5"><Icon icon={PawPrint} />{$_('settings.data.sampleHeading')}</div>
+          <p class="text-[length:var(--text-sm)] text-[var(--text-muted)] flex-1">{$_('settings.data.sampleHint')}</p>
+          <Button variant="secondary" block onclick={() => (pendingSample = true)}>
+            {#snippet icon()}
+              <Icon icon={PawPrint} />
+            {/snippet}
+            {$_('settings.data.sample')}
+          </Button>
+        </div>
       </div>
     </Card>
   </main>
@@ -278,4 +295,15 @@
   danger
   onconfirm={confirmReset}
   oncancel={cancelReset}
+/>
+
+<ConfirmDialog
+  open={pendingSample}
+  title={$_('settings.data.sampleConfirmTitle')}
+  message={$_('settings.data.sampleConfirmMessage')}
+  confirmLabel={$_('settings.data.sampleConfirmAction')}
+  cancelLabel={$_('settings.data.cancel')}
+  danger
+  onconfirm={confirmRestoreSample}
+  oncancel={() => (pendingSample = false)}
 />

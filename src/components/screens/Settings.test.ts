@@ -35,6 +35,14 @@ vi.mock('../../lib/campaignExport', async (importOriginal) => {
   };
 });
 
+const restoreSampleCampaign = vi.fn(async () => {});
+const resetAllCampaignData = vi.fn(async () => {});
+
+vi.mock('../../lib/resetData', () => ({
+  restoreSampleCampaign: () => restoreSampleCampaign(),
+  resetAllCampaignData: () => resetAllCampaignData(),
+}));
+
 describe('Settings', () => {
   beforeEach(() => {
     setTheme('light');
@@ -167,5 +175,30 @@ describe('Settings', () => {
     await fireEvent.click(within(dialog).getByRole('button', { name: 'Import and replace' }));
 
     expect(await screen.findByText('Storage is full.')).toBeInTheDocument();
+  });
+
+  it('restores the sample campaign only after confirming', async () => {
+    restoreSampleCampaign.mockClear();
+    render(Settings, { props: { onnavigate: vi.fn() } });
+
+    await fireEvent.click(screen.getByRole('button', { name: 'Restore sample campaign' }));
+
+    const dialog = await screen.findByRole('dialog');
+    expect(within(dialog).getByText('Replace with the sample campaign?')).toBeInTheDocument();
+    expect(restoreSampleCampaign).not.toHaveBeenCalled();
+    await fireEvent.click(within(dialog).getByRole('button', { name: 'Replace with sample' }));
+
+    await waitFor(() => expect(restoreSampleCampaign).toHaveBeenCalledOnce());
+    expect(resetAllCampaignData).not.toHaveBeenCalled();
+  });
+
+  it('cancelling the sample dialog leaves the campaign alone', async () => {
+    restoreSampleCampaign.mockClear();
+    render(Settings, { props: { onnavigate: vi.fn() } });
+
+    await fireEvent.click(screen.getByRole('button', { name: 'Restore sample campaign' }));
+    await fireEvent.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'Cancel' }));
+
+    expect(restoreSampleCampaign).not.toHaveBeenCalled();
   });
 });

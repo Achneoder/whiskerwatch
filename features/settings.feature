@@ -89,3 +89,22 @@ Feature: Settings
     And I reset all campaign data
     And I navigate to the "Adventure" screen
     Then I should not see "The granary raid"
+
+  Scenario: Bringing the sample campaign back after a reset
+    Given I open Whiskerwatch
+    When I navigate to the "Settings" screen
+    And I reset all campaign data
+    And I navigate to the "Settings" screen
+    And I restore the sample campaign
+    And I navigate to the "Adventure" screen
+    Then I should see "The granary raid"
+    When I navigate to the "Factions" screen
+    Then I should see "The Gnawing Court"
+
+  Scenario: The restored sample campaign is in the chosen language
+    Given I open Whiskerwatch
+    When I navigate to the "Settings" screen
+    And I switch the language to German
+    And I restore the sample campaign
+    And I navigate to the "Abenteuer" screen
+    Then I should see "Der Überfall auf den Kornspeicher"

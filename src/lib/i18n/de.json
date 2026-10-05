@@ -564,6 +564,12 @@
       "resetConfirmMessage": "Dies löscht dauerhaft alle deine Kampagnendaten (Gruppen, Abenteuer, Fraktionen usw.) und kann nicht rückgängig gemacht werden. Stelle sicher, dass du alles, was du behalten möchtest, vorher exportiert hast.",
       "resetConfirmAction": "Zurücksetzen und neu anfangen",
       "resetDone": "Kampagne zurückgesetzt. Neuer Anfang!",
+      "sampleHeading": "Beispielkampagne",
+      "sampleHint": "Lade die Beispielkampagne rund um Brombeerwacht, um die App kennenzulernen oder sie deinen Spielern zu zeigen. Dies ersetzt alles, was gerade in der App ist.",
+      "sample": "Beispielkampagne wiederherstellen",
+      "sampleConfirmTitle": "Durch die Beispielkampagne ersetzen?",
+      "sampleConfirmMessage": "Dies ersetzt dauerhaft alle deine Kampagnendaten (Gruppen, Abenteuer, Fraktionen usw.) durch die Beispielkampagne und kann nicht rückgängig gemacht werden. Stelle sicher, dass du alles, was du behalten möchtest, vorher exportiert hast.",
+      "sampleConfirmAction": "Durch Beispiel ersetzen",
       "exportShared": "Kampagne geteilt. Importiere sie auf deinem anderen Gerät unter Einstellungen.",
       "preview": {
         "label": "Inhalt dieser Datei",

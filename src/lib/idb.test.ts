@@ -1,5 +1,5 @@
 import { describe, expect, it, beforeEach } from 'vitest';
-import { idbGetAll, idbReplaceAll, hydrateList, finalizeFirstBoot, persistList, clearList } from './idb';
+import { idbGetAll, idbReplaceAll, hydrateList, finalizeFirstBoot, persistList, clearList, resetListToSeed } from './idb';
 
 interface Thing {
   id: string;
@@ -119,6 +119,29 @@ describe('idb', () => {
       const result = await hydrateList<Thing>('idb-test:clear', seed);
       expect(result.isFirstBoot).toBe(false);
       expect(result.raw).toEqual([]);
+    });
+  });
+
+  describe('resetListToSeed', () => {
+    it('empties a list and forgets it was initialized so the next load reseeds it', async () => {
+      await finalizeFirstBoot<Thing>('idb-test:reseed', [{ id: '1', label: 'edited' }]);
+
+      await resetListToSeed('idb-test:reseed');
+
+      expect(await idbGetAll<Thing>('idb-test:reseed')).toEqual([]);
+      const seed: Thing[] = [{ id: 'seed', label: 'demo' }];
+      const result = await hydrateList<Thing>('idb-test:reseed', seed);
+      expect(result.isFirstBoot).toBe(true);
+      expect(result.raw).toEqual(seed);
+    });
+
+    it('also reseeds a list that was previously reset to empty', async () => {
+      await clearList('idb-test:reseed-cleared');
+
+      await resetListToSeed('idb-test:reseed-cleared');
+
+      const seed: Thing[] = [{ id: 'seed', label: 'demo' }];
+      expect((await hydrateList<Thing>('idb-test:reseed-cleared', seed)).raw).toEqual(seed);
     });
   });
 

@@ -84,3 +84,12 @@ When('I reset all campaign data', async function (this: WhiskerwatchWorld) {
     this.page.getByRole('dialog').getByRole('button', { name: 'Reset and start over' }).click(),
   ]);
 });
+
+When('I restore the sample campaign', async function (this: WhiskerwatchWorld) {
+  // Matches the button in either language, since the GM may have switched to German first.
+  await this.page.getByRole('button', { name: /Restore sample campaign|Beispielkampagne wiederherstellen/ }).click();
+  await Promise.all([
+    this.page.waitForEvent('load'),
+    this.page.getByRole('dialog').getByRole('button', { name: /Replace with sample|Durch Beispiel ersetzen/ }).click(),
+  ]);
+});

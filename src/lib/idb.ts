@@ -143,6 +143,16 @@ async function setMeta(key: string, value: unknown): Promise<void> {
   });
 }
 
+async function deleteMeta(key: string): Promise<void> {
+  const db = await openDb();
+  await new Promise<void>((resolve, reject) => {
+    const tx = db.transaction(META_STORE, 'readwrite');
+    tx.objectStore(META_STORE).delete(key);
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error ?? new Error('IndexedDB meta delete failed.'));
+  });
+}
+
 function initializedMetaKey(listKey: string): string {
   return `initialized:${listKey}`;
 }
@@ -245,4 +255,14 @@ export async function persistList<T extends Identified>(listKey: string, items: 
 export async function clearList(listKey: string): Promise<void> {
   await idbReplaceAll(listKey, []);
   await setMeta(initializedMetaKey(listKey), true);
+}
+
+/**
+ * Clears a persisted list *and* forgets that it was ever initialized (used by
+ * "restore sample campaign"), so the next load treats it as a first-ever boot
+ * and reseeds it with the store's demo data — the inverse of `clearList`.
+ */
+export async function resetListToSeed(listKey: string): Promise<void> {
+  await idbReplaceAll(listKey, []);
+  await deleteMeta(initializedMetaKey(listKey));
 }
