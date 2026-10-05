@@ -21,7 +21,7 @@ export const ITEM_TABLE: LocalizedTable = {
   ],
   de: [
     'Ein verbeulter Fingerhut, brauchbar als Helm (leichte Rüstung, 1 Feld).',
-    'Pips im Wert von drei Eicheln, in ein Tuch geknotet.',
+    'Kerne im Wert von drei Eicheln, in ein Tuch geknotet.',
     'Ein Splitter eines zerbrochenen Spiegels — wirft Licht zurück, könnte einen Feind einmal blenden.',
     'Eine Spule Seidenfaden der Tunnelwitwe, so stark wie ein Seil.',
     'Ein einzelnes wasserfestes Streichholz, noch gut für ein Feuer.',

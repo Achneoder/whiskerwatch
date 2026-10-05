@@ -28,7 +28,7 @@ export const DEMO_PARTY: DemoText<PartyMember, 'name' | 'role'>[] = [
 export const DEMO_HIRELINGS: DemoText<Hireling, 'name' | 'role' | 'notes'>[] = [
   {
     en: { name: 'Oat', role: 'Porter', notes: 'Carries the spare rope and two rations. Paid 5p/day.' },
-    de: { name: 'Oat', role: 'Träger', notes: 'Trägt das Ersatzseil und zwei Rationen. Lohn: 5 Pips/Tag.' },
+    de: { name: 'Oat', role: 'Träger', notes: 'Trägt das Ersatzseil und zwei Rationen. Lohn: 5 Kerne/Tag.' },
   },
 ];
 
@@ -129,7 +129,7 @@ export const DEMO_FACTIONS: DemoText<Faction, 'name' | 'note' | 'tags'>[] = [
     },
     de: {
       name: 'Eulenbrückenzoll',
-      note: 'Eine Schleiereule in der alten Mühle verlangt einen Pip als Zoll für den Weg über den Mühlbach — ist die Uhr voll, schnappt sie sich Mäuse, die nicht zahlen.',
+      note: 'Eine Schleiereule in der alten Mühle verlangt einen Kern als Zoll für den Weg über den Mühlbach — ist die Uhr voll, schnappt sie sich Mäuse, die nicht zahlen.',
       tags: ['Neutral', 'Zoll'],
     },
   },
@@ -199,7 +199,7 @@ export const DEMO_HEX_NODES: DemoText<HexNode, 'name' | 'notes'>[] = [
     },
     de: {
       name: 'Eulenbrücke',
-      notes: 'Ein einzelnes Brett über den Mühlbach; im Gebälk hockt eine Schleiereule und verlangt einen Pip Zoll.',
+      notes: 'Ein einzelnes Brett über den Mühlbach; im Gebälk hockt eine Schleiereule und verlangt einen Kern Zoll.',
     },
   },
   {
