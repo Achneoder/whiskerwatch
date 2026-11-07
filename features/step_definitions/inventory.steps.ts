@@ -94,3 +94,62 @@ Then(
     }
   },
 );
+
+/** One inventory section ("Paws", "Body", "Pack") inside the open form: its label plus its slot grid. */
+function inventorySection(page: Page, label: string): Locator {
+  return page.getByRole('dialog').getByText(label, { exact: true }).locator('..');
+}
+
+function filledSlot(page: Page, itemName: string): Locator {
+  return page.getByRole('dialog').getByRole('button', { name: new RegExp(`^${itemName}, `) });
+}
+
+/** Drags with real mouse moves (pointer events), the way a GM would with a mouse or trackpad. */
+async function dragTo(page: Page, source: Locator, target: Locator): Promise<void> {
+  const from = await source.boundingBox();
+  const to = await target.boundingBox();
+  if (!from || !to) throw new Error('drag source or target is not visible');
+  await page.mouse.move(from.x + from.width / 2, from.y + from.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(to.x + to.width / 2, to.y + to.height / 2, { steps: 8 });
+  await page.mouse.up();
+}
+
+When(
+  'the GM adds {string} to an empty slot in the {string} section',
+  async function (this: WhiskerwatchWorld, itemName: string, section: string) {
+    await inventorySection(this.page, section).getByRole('button', { name: 'Empty slot, add item' }).first().click();
+    await saveItemDraft(this.page, itemName);
+    await itemEditor(this.page).waitFor({ state: 'hidden' });
+  },
+);
+
+When(
+  'the GM drags {string} onto an empty slot in the {string} section',
+  async function (this: WhiskerwatchWorld, itemName: string, section: string) {
+    const target = inventorySection(this.page, section).getByRole('button', { name: 'Empty slot, add item' }).first();
+    await dragTo(this.page, filledSlot(this.page, itemName), target);
+  },
+);
+
+When('the GM drags {string} onto {string}', async function (this: WhiskerwatchWorld, itemName: string, otherName: string) {
+  await dragTo(this.page, filledSlot(this.page, itemName), filledSlot(this.page, otherName));
+});
+
+Then(
+  'the {string} section should hold {string}',
+  async function (this: WhiskerwatchWorld, section: string, itemName: string) {
+    await inventorySection(this.page, section)
+      .getByRole('button', { name: new RegExp(`^${itemName}, `) })
+      .waitFor({ state: 'visible' });
+  },
+);
+
+Then(
+  'the {string} section should not hold {string}',
+  async function (this: WhiskerwatchWorld, section: string, itemName: string) {
+    await inventorySection(this.page, section)
+      .getByRole('button', { name: new RegExp(`^${itemName}, `) })
+      .waitFor({ state: 'detached' });
+  },
+);

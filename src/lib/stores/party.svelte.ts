@@ -1,7 +1,7 @@
 import { createPersistedList } from './persistedList.svelte';
 import { migrateConditions, type ConditionName, type Scar } from '../conditions';
 import { applyDamage, type DamageOutcome } from '../combat';
-import { addItem, removeItem, updateItem, tickCharge, type Item } from '../items';
+import { addItem, removeItem, updateItem, tickCharge, sanitizeSection, type Item } from '../items';
 import { DEMO_PARTY } from '../demoCampaign';
 
 export interface PartyMember {
@@ -171,7 +171,7 @@ function normalizeMember(raw: unknown): PartyMember {
     status: r.status === 'deceased' ? 'deceased' : 'active',
     conditions: migrateConditions(r.conditions),
     scars: Array.isArray(r.scars) ? r.scars.filter(isScar) : [],
-    items: Array.isArray(r.items) ? r.items.filter(isItem) : [],
+    items: Array.isArray(r.items) ? r.items.filter(isItem).map(sanitizeSection) : [],
   };
 }
 
