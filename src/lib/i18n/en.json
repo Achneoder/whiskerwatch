@@ -285,6 +285,8 @@
       "notesPlaceholder": "d6 damage, Armor 2, keepsake…",
       "editingSlot": "Editing slot"
     },
+    "dropDoesNotFit": "{name} doesn’t fit there.",
+    "dragHint": "Drag an item onto another slot to move it, or onto another item to swap them. On touch, press and hold first.",
     "removeItem": "Remove item",
     "pack": "Pack",
     "encumberedTitle": "Encumbered.",

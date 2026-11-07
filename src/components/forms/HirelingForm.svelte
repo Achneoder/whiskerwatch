@@ -103,9 +103,10 @@
   <ItemSlotGrid
     {items}
     layout={HIRELING_LAYOUT}
-    onadd={(input) => (items = addItem(items, input))}
+    onadd={(input) => (items = addItem(items, input, HIRELING_LAYOUT))}
     onremove={(itemId) => (items = removeItem(items, itemId))}
     onupdate={(itemId, patch) => (items = updateItem(items, itemId, patch))}
+    onarrange={(next) => (items = next)}
   />
 
   <div class="flex justify-end gap-[var(--gap-inline)] pt-[var(--sp-2)]">

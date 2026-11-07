@@ -285,6 +285,8 @@
       "notesPlaceholder": "d6 Schaden, Rüstung 2, Andenken…",
       "editingSlot": "Platz bearbeiten"
     },
+    "dropDoesNotFit": "{name} passt dort nicht hin.",
+    "dragHint": "Ziehe einen Gegenstand auf einen anderen Platz, um ihn zu verschieben, oder auf einen anderen Gegenstand, um beide zu tauschen. Auf Touch-Geräten erst kurz gedrückt halten.",
     "removeItem": "Gegenstand entfernen",
     "pack": "Rucksack",
     "encumberedTitle": "Überladen.",

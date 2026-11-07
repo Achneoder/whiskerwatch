@@ -8,7 +8,7 @@
   import LiveSessionEncounterCard from './LiveSessionEncounterCard.svelte';
   import type { EncounterInstance } from './LiveSessionEncounterInstance.svelte';
   import LiveSessionWatchCard, { type WatchNeighborOption } from './LiveSessionWatchCard.svelte';
-  import { MOUSE_LAYOUT, HIRELING_LAYOUT, capacity } from '../../lib/items';
+  import { MOUSE_LAYOUT, HIRELING_LAYOUT, capacity, withoutSection } from '../../lib/items';
   import SaveDock from './SaveDock.svelte';
   import ConfirmDialog from '../ui/ConfirmDialog.svelte';
   import Tag from '../ui/Tag.svelte';
@@ -561,7 +561,7 @@
       owner === 'party' ? updateMember(id, { items }) : updateHireling(id, { items });
 
     updateOwner(from.source, fromId, beforeFrom.filter((i) => i.id !== itemId));
-    updateOwner(to.source, toId, [...beforeTo, item]);
+    updateOwner(to.source, toId, [...beforeTo, withoutSection(item)]);
 
     announce('item:' + itemId, $_('liveSession.itemMoved', { values: { item: item.name, to: to.member.name } }), () => {
       updateOwner(from.source, fromId, beforeFrom);

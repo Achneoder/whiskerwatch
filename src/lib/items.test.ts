@@ -1,5 +1,19 @@
 import { describe, expect, it } from 'vitest';
-import { tickCharge, splitSections, isOverCapacity, capacity, MOUSE_LAYOUT, HIRELING_LAYOUT, type Item } from './items';
+import {
+  tickCharge,
+  splitSections,
+  isOverCapacity,
+  capacity,
+  addItem,
+  pinSections,
+  moveItemToSection,
+  swapItems,
+  sanitizeSection,
+  withoutSection,
+  MOUSE_LAYOUT,
+  HIRELING_LAYOUT,
+  type Item,
+} from './items';
 
 function makeItem(overrides: Partial<Item> = {}): Item {
   return {
@@ -110,5 +124,151 @@ describe('layouts', () => {
   it('match the SRD: mice 10 slots, hirelings 6', () => {
     expect(capacity(MOUSE_LAYOUT)).toBe(10);
     expect(capacity(HIRELING_LAYOUT)).toBe(6);
+  });
+});
+
+describe('explicit item placement', () => {
+  it('puts an item with a section in that section, even when the paws are free', () => {
+    const { paws, pack } = splitSections([makeItem({ id: 'a', section: 'pack' })]);
+
+    expect(paws).toEqual([]);
+    expect(pack.map((i) => i.id)).toEqual(['a']);
+  });
+
+  it('packs unplaced items around placed ones', () => {
+    const items = [
+      makeItem({ id: 'old1' }),
+      makeItem({ id: 'old2' }),
+      makeItem({ id: 'new', section: 'paws' }),
+    ];
+
+    const { paws, body } = splitSections(items);
+
+    expect(paws.map((i) => i.id)).toEqual(['old1', 'new']);
+    expect(body.map((i) => i.id)).toEqual(['old2']);
+  });
+
+  it('falls back to the first free slot when its section is full, instead of dropping it', () => {
+    const items = [
+      makeItem({ id: 'a', section: 'paws' }),
+      makeItem({ id: 'b', section: 'paws' }),
+      makeItem({ id: 'c', section: 'paws' }),
+    ];
+
+    expect(splitSections(items).body.map((i) => i.id)).toEqual(['c']);
+  });
+
+  it('ignores an unknown section value', () => {
+    const items = [makeItem({ id: 'a', section: 'tail' as never })];
+
+    expect(splitSections(items).paws.map((i) => i.id)).toEqual(['a']);
+    expect(sanitizeSection(items[0]!)).not.toHaveProperty('section');
+  });
+});
+
+describe('addItem with a section', () => {
+  it('adds the item to the chosen section without moving the existing items', () => {
+    const items = [makeItem({ id: 'a' }), makeItem({ id: 'b' })];
+
+    const next = addItem(items, { name: 'Rations', slots: 1, charges: null, maxCharges: null, notes: '', section: 'pack' });
+
+    const { paws, pack } = splitSections(next);
+    expect(paws.map((i) => i.id)).toEqual(['a', 'b']);
+    expect(pack.map((i) => i.name)).toEqual(['Rations']);
+  });
+
+  it('does not let a new paw item shove an older paw item away', () => {
+    const items = [makeItem({ id: 'a' })];
+
+    const next = addItem(items, { name: 'Needle', slots: 1, charges: null, maxCharges: null, notes: '', section: 'paws' });
+
+    expect(splitSections(next).paws.map((i) => i.name)).toEqual(['Torch', 'Needle']);
+  });
+});
+
+describe('pinSections', () => {
+  it('stamps each item with the section it renders in', () => {
+    const items = ['a', 'b', 'c'].map((id) => makeItem({ id }));
+
+    expect(pinSections(items).map((i) => i.section)).toEqual(['paws', 'paws', 'body']);
+  });
+});
+
+describe('moveItemToSection', () => {
+  it('moves an item into another section and leaves the rest in place', () => {
+    const items = ['a', 'b', 'c'].map((id) => makeItem({ id }));
+
+    const next = moveItemToSection(items, 'a', 'pack')!;
+
+    const { paws, body, pack } = splitSections(next);
+    expect(paws.map((i) => i.id)).toEqual(['b']);
+    expect(body.map((i) => i.id)).toEqual(['c']);
+    expect(pack.map((i) => i.id)).toEqual(['a']);
+  });
+
+  it('refuses a move into a section without room', () => {
+    const items = [makeItem({ id: 'a' }), makeItem({ id: 'b' }), makeItem({ id: 'c', section: 'pack' })];
+
+    expect(moveItemToSection(items, 'c', 'paws')).toBeNull();
+  });
+
+  it('refuses a 2-slot item into a section with only one free slot', () => {
+    const items = [makeItem({ id: 'a', section: 'paws' }), makeItem({ id: 'big', slots: 2, section: 'pack' })];
+
+    expect(moveItemToSection(items, 'big', 'paws')).toBeNull();
+  });
+
+  it('always lets an item into the pack, even when encumbered', () => {
+    const items = Array.from({ length: 11 }, (_, i) => makeItem({ id: `i${i}` }));
+
+    expect(moveItemToSection(items, 'i0', 'pack')).not.toBeNull();
+  });
+
+  it('returns null for an unknown item', () => {
+    expect(moveItemToSection([], 'missing', 'pack')).toBeNull();
+  });
+});
+
+describe('swapItems', () => {
+  it('swaps section and order of two items', () => {
+    const items = [makeItem({ id: 'a' }), makeItem({ id: 'b' }), makeItem({ id: 'c', section: 'pack' })];
+
+    const next = swapItems(items, 'a', 'c')!;
+
+    const { paws, pack } = splitSections(next);
+    expect(paws.map((i) => i.id)).toEqual(['c', 'b']);
+    expect(pack.map((i) => i.id)).toEqual(['a']);
+  });
+
+  it('swaps a 2-slot item with a 2-slot item across sections', () => {
+    const items = [makeItem({ id: 'big1', slots: 2, section: 'paws' }), makeItem({ id: 'big2', slots: 2, section: 'body' })];
+
+    const next = swapItems(items, 'big1', 'big2')!;
+
+    expect(splitSections(next).paws.map((i) => i.id)).toEqual(['big2']);
+    expect(splitSections(next).body.map((i) => i.id)).toEqual(['big1']);
+  });
+
+  it('refuses a swap that would overfill a section', () => {
+    const items = [
+      makeItem({ id: 'a', section: 'paws' }),
+      makeItem({ id: 'b', section: 'paws' }),
+      makeItem({ id: 'big', slots: 2, section: 'pack' }),
+    ];
+
+    expect(swapItems(items, 'big', 'a')).toBeNull();
+  });
+
+  it('returns null for the same item or an unknown id', () => {
+    const items = [makeItem({ id: 'a' })];
+
+    expect(swapItems(items, 'a', 'a')).toBeNull();
+    expect(swapItems(items, 'a', 'missing')).toBeNull();
+  });
+});
+
+describe('withoutSection', () => {
+  it('strips the placement so a handed-off item fills the first free slot', () => {
+    expect(withoutSection(makeItem({ section: 'pack' }))).not.toHaveProperty('section');
   });
 });
